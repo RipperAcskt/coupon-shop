@@ -1,0 +1,53 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+directive @auth on FIELD_DEFINITION
+
+type User {
+  id: ID!
+  email: String
+  phone: String!
+  roles: [String!]!
+  organizationId: ID
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Organization {
+  id: ID!
+  name: String!
+  orgn: String!
+  kpp: String!
+  inn: String!
+  ownerId: ID!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Transaction {
+  id: ID!
+  ownerId: ID!
+  value: Float!
+  trxNumber: String!
+  status: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  actionedAt: String
+}
+
+type Query {
+  me: User! @auth
+  getOrganization: Organization @auth
+  getOrganizationUsers: [User] @auth
+  getTransactions: [Transaction] @auth
+}
+
+input UpdateUser {
+  email: String!
+}
+
+type Mutation {
+  updatePersonalInfo(input: UpdateUser!): User! @auth
+}
+
