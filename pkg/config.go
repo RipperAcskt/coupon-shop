@@ -37,7 +37,7 @@ type AppConfig struct {
 }
 
 func CreateConfig() (*AppConfig, error) {
-	err := godotenv.Load(".env")
+	err := godotenv.Load(".env.dist")
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error())
 	}

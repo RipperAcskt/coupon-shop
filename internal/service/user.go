@@ -45,7 +45,13 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel) 
 	if channel.IsEmail() {
 		u, err := uc.finder.FindByEmail(resource)
 		if err != nil {
-			return nil, "", err
+			createdUser, err := uc.creator.Create(resource, channel)
+			if err != nil {
+				return nil, "", err
+			}
+
+			token, err := uc.jwtManger.Generate(createdUser, false)
+			return u, token, err
 		}
 
 		token, err := uc.jwtManger.Generate(u, false)
@@ -54,7 +60,7 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel) 
 
 	u, err := uc.finder.FindByPhone(resource)
 	if err != nil {
-		createdUser, _ := uc.creator.Create(resource)
+		createdUser, _ := uc.creator.Create(resource, channel)
 
 		token, err := uc.jwtManger.Generate(createdUser, false)
 		return createdUser, token, err
