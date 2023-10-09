@@ -18,6 +18,11 @@ type Mailer struct {
 	Password string `yaml:"password"`
 }
 
+type Yookassa struct {
+	ID     string `yaml:"id"`
+	ApiKey string `yaml:"api_key"`
+}
+
 type Database struct {
 	URL string `yaml:"url"`
 }
@@ -34,6 +39,7 @@ type AppConfig struct {
 	Database
 	Server
 	Mailer
+	Yookassa
 }
 
 func CreateConfig() (*AppConfig, error) {

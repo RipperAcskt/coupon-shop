@@ -11,3 +11,6 @@ mailer:
   port: ${MAILER_PORT}
   username: ${MAILER_USERNAME}
   password: ${MAILER_PASSWORD}
+yookassa:
+  id: ${YOOKASSA_ID}
+  api_key: ${YOOKASSA_API_KEY}

@@ -5,6 +5,7 @@ import (
 	"shop-smart-api/internal/app"
 	"shop-smart-api/internal/controller"
 	di "shop-smart-api/internal/infrastructure/container"
+	"shop-smart-api/internal/service/payment"
 	"shop-smart-api/pkg"
 )
 
@@ -24,13 +25,16 @@ func (a *application) Run() error {
 	otpService := container.ProvideOTPService()
 	organizationService := container.ProvideOrganizationService()
 	transactionService := container.ProvideTransactionService()
+	paymentSvc := payment.New(a.appCfg)
 
 	httpServer := controller.CreateServer(
 		a.appCfg.Server,
 		otpService,
 		userService,
 		organizationService,
+		paymentSvc,
 		transactionService,
+		a.appCfg,
 	)
 
 	return httpServer.RunServer()

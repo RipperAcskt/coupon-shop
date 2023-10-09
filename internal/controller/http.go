@@ -29,18 +29,14 @@ type http struct {
 	organizationTransformer transformers.OrganizationTransformer
 	transactionService      service.TransactionService
 	transactionTransformer  transformers.TransactionTransformer
+	paymentSvc              router.PaymentService
 	serverConfig            pkg.Server
 	validator               *http_validator.Validator
 	echo                    *echo.Echo
+	cfg                     *pkg.AppConfig
 }
 
-func CreateServer(
-	sc pkg.Server,
-	ots service.OTPService,
-	us service.UserService,
-	ogs service.OrganizationService,
-	ts service.TransactionService,
-) Server {
+func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, ts service.TransactionService, cfg *pkg.AppConfig) Server {
 	v := http_validator.CreateValidator(validator.New())
 	e := echo.New()
 	e.Validator = v
@@ -62,8 +58,10 @@ func CreateServer(
 		transactionService:      ts,
 		transactionTransformer:  tt,
 		serverConfig:            sc,
+		paymentSvc:              paymnetSvc,
 		validator:               v,
 		echo:                    e,
+		cfg:                     cfg,
 	}
 }
 
@@ -79,6 +77,8 @@ func (h *http) appendRestRoutes(e *echo.Echo) {
 	apiGroup := e.Group("/api")
 	authRouter := router.CreateAuthRouterManager(apiGroup, h.validator, h.userService, h.otpService)
 	authRouter.PopulateRoutes()
+	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc)
+	paymentRouter.PopulateRoutes()
 
 	otpGroup := apiGroup.Group("/otp")
 	otpRouter := router.CreateOTPRouterManager(otpGroup, h.validator, h.userService, h.otpService, h.serverConfig)
