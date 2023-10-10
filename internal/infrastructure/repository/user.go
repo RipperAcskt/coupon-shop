@@ -38,16 +38,13 @@ func (r *userRepository) Store(
 	phone, email string,
 	roles []entity.Role,
 ) (*entity.User, error) {
-	return r.executeQueryRow(`
-		INSERT INTO users (email, phone, roles) VALUES ($1, $2, $3)
-		RETURNING id, email, phone, created_at, updated_at, organization_id, roles
-	`, email, phone, pq.Array(roles))
+	return r.executeQueryRow(`INSERT INTO users (email, phone) VALUES ($1, $2) RETURNING id, email, phone, created_at, updated_at`, email, phone)
 }
 
 func (r *userRepository) UpdateUser(id int64, email string) (*entity.User, error) {
 	return r.executeQueryRow(`
 		UPDATE users SET email = $1 WHERE id = $2
-		RETURNING id, email, phone, created_at, updated_at, organization_id, roles
+		RETURNING id, email, phone, created_at, updated_at
 	`, email, id)
 }
 
@@ -103,8 +100,6 @@ func (r *userRepository) executeQueryRow(query string, args ...any) (*entity.Use
 		&user.Phone,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.OrganizationID,
-		pq.Array(&user.Roles),
 	)
 	if err != nil {
 		return nil, err

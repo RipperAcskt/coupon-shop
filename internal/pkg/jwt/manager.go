@@ -32,7 +32,7 @@ func (j *jwtManager) Generate(user *entity.User, isFully bool) (string, error) {
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
-		UserId:  user.ID,
+		//UserId:  user.ID,
 		IsFully: isFully,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

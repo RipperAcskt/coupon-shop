@@ -10,7 +10,6 @@ import (
 	"shop-smart-api/internal/controller/graphql/directives"
 	"shop-smart-api/internal/controller/graphql/graph"
 	"shop-smart-api/internal/controller/graphql/transformers"
-	http_context "shop-smart-api/internal/controller/http/context"
 	"shop-smart-api/internal/controller/http/router"
 	http_validator "shop-smart-api/internal/controller/http/validator"
 	"shop-smart-api/internal/service"
@@ -40,9 +39,9 @@ func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService,
 	v := http_validator.CreateValidator(validator.New())
 	e := echo.New()
 	e.Validator = v
-	e.Use(http_context.EchoContextToContextMiddleware())
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	//e.Use(http_context.EchoContextToContextMiddleware())
+	//e.Use(middleware.Logger())
+	//e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
 	ut := transformers.CreateUserTransformer()
