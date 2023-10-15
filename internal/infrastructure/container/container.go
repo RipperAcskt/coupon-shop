@@ -20,7 +20,7 @@ type Container interface {
 	ProvideUserService() service.UserService
 	ProvideOTPService() service.OTPService
 	ProvideOrganizationService() service.OrganizationService
-	ProvideTransactionService() service.TransactionService
+	ProvideTransactionService() transaction.PaymentService
 }
 
 type container struct {
@@ -45,7 +45,7 @@ func (c *container) ProvideOrganizationService() service.OrganizationService {
 	return c.resolveOrganizationServiceDependencies()
 }
 
-func (c *container) ProvideTransactionService() service.TransactionService {
+func (c *container) ProvideTransactionService() transaction.PaymentService {
 	return c.resolveTransactionServiceDependencies()
 }
 
@@ -84,9 +84,9 @@ func (c *container) resolveOrganizationServiceDependencies() service.Organizatio
 	return service.CreateOrganizationService(organizationFinder)
 }
 
-func (c *container) resolveTransactionServiceDependencies() service.TransactionService {
-	transactionRepository := repository.CreateTransactionRepository(c.database)
-	transactionFinder := transaction.CreateFinder(transactionRepository)
+func (c *container) resolveTransactionServiceDependencies() transaction.PaymentService {
+	transactionRepository := repository.CreatePaymentRepository(c.database)
+	transactionFinder := transaction.CreatePaymentService(transactionRepository)
 
-	return service.CreateTransactionService(transactionFinder)
+	return transactionFinder
 }

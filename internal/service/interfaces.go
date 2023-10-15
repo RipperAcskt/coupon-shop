@@ -7,7 +7,7 @@ import (
 
 type (
 	UserService interface {
-		Get(id int64) (*entity.User, error)
+		Get(id string) (*entity.User, error)
 		GetByPhone(phone string) (*entity.User, error)
 		GetByEmail(email string) (*entity.User, error)
 		GetByOrganization(id int64) ([]*entity.User, error)

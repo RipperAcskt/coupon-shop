@@ -2,21 +2,30 @@ package transaction
 
 import (
 	"shop-smart-api/internal/entity"
-	"shop-smart-api/internal/infrastructure/repository"
 )
 
-type Finder interface {
-	FindByOwner(id int64) ([]*entity.Transaction, error)
+type PaymentInterface interface {
+	CreatePayment(payment entity.Payment) (*entity.Payment, error)
+	GetPayments(userId string) (*entity.Payment, error)
+	UpdatePayment(id int64) (*entity.Payment, error)
 }
 
-type finder struct {
-	repository repository.TransactionRepository
+type PaymentService struct {
+	repository PaymentInterface
 }
 
-func CreateFinder(r repository.TransactionRepository) Finder {
-	return &finder{r}
+func CreatePaymentService(r PaymentInterface) PaymentService {
+	return PaymentService{r}
 }
 
-func (f *finder) FindByOwner(id int64) ([]*entity.Transaction, error) {
-	return f.repository.GetByOwner(id)
+func (s PaymentService) CreatePayment(payment entity.Payment) (*entity.Payment, error) {
+	return s.repository.CreatePayment(payment)
+}
+
+func (s PaymentService) GetPayments(userId string) (*entity.Payment, error) {
+	return s.repository.GetPayments(userId)
+}
+
+func (s PaymentService) UpdatePayment(id int64) (*entity.Payment, error) {
+	return s.repository.UpdatePayment(id)
 }

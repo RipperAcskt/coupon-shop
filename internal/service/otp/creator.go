@@ -6,7 +6,7 @@ import (
 )
 
 type Creator interface {
-	Create(owner int64) (*entity.OTP, error)
+	Create(owner string) (*entity.OTP, error)
 }
 
 type creator struct {
@@ -18,7 +18,7 @@ func CreateCreator(r repository.OTPRepository, g Generator) Creator {
 	return &creator{r, g}
 }
 
-func (c *creator) Create(owner int64) (*entity.OTP, error) {
+func (c *creator) Create(owner string) (*entity.OTP, error) {
 	code := c.generator.Generate()
 
 	return c.repository.Store(owner, code)

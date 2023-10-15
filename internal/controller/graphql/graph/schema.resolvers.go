@@ -14,7 +14,7 @@ import (
 
 // UpdatePersonalInfo is the resolver for the updatePersonalInfo field.
 func (r *mutationResolver) UpdatePersonalInfo(ctx context.Context, input model.UpdateUser) (*model.User, error) {
-	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(int64)
+	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(string)
 	user, _ := r.userService.Get(currentUser)
 
 	updatedUser, err := r.userService.Update(user, input.Email)
@@ -27,7 +27,7 @@ func (r *mutationResolver) UpdatePersonalInfo(ctx context.Context, input model.U
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
-	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(int64)
+	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(string)
 	user, _ := r.userService.Get(currentUser)
 
 	return r.userTransformer.TransformToModel(user), nil
@@ -35,7 +35,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 
 // GetOrganization is the resolver for the getOrganization field.
 func (r *queryResolver) GetOrganization(ctx context.Context) (*model.Organization, error) {
-	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(int64)
+	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(string)
 	user, _ := r.userService.Get(currentUser)
 
 	if user.OrganizationID == nil {
@@ -52,7 +52,7 @@ func (r *queryResolver) GetOrganization(ctx context.Context) (*model.Organizatio
 
 // GetOrganizationUsers is the resolver for the getOrganizationUsers field.
 func (r *queryResolver) GetOrganizationUsers(ctx context.Context) ([]*model.User, error) {
-	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(int64)
+	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(string)
 	user, _ := r.userService.Get(currentUser)
 
 	if !user.IsOwner() && !user.IsEditor() {
@@ -73,15 +73,8 @@ func (r *queryResolver) GetOrganizationUsers(ctx context.Context) ([]*model.User
 
 // GetTransactions is the resolver for the getTransactions field.
 func (r *queryResolver) GetTransactions(ctx context.Context) ([]*model.Transaction, error) {
-	currentUser := ctx.Value(directives.AuthKey(directives.Key)).(int64)
-	user, _ := r.userService.Get(currentUser)
 
-	transactions, err := r.transactionService.GetTransactions(user)
-	if err != nil {
-		return nil, err
-	}
-
-	return r.transactionTransformer.TransformManyToModel(transactions), nil
+	return nil, nil
 }
 
 // Mutation returns MutationResolver implementation.

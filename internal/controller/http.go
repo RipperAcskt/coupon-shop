@@ -10,9 +10,11 @@ import (
 	"shop-smart-api/internal/controller/graphql/directives"
 	"shop-smart-api/internal/controller/graphql/graph"
 	"shop-smart-api/internal/controller/graphql/transformers"
+	http_context "shop-smart-api/internal/controller/http/context"
 	"shop-smart-api/internal/controller/http/router"
 	http_validator "shop-smart-api/internal/controller/http/validator"
 	"shop-smart-api/internal/service"
+	"shop-smart-api/internal/service/transaction"
 	"shop-smart-api/pkg"
 )
 
@@ -26,8 +28,7 @@ type http struct {
 	userTransformer         transformers.UserTransformer
 	organizationService     service.OrganizationService
 	organizationTransformer transformers.OrganizationTransformer
-	transactionService      service.TransactionService
-	transactionTransformer  transformers.TransactionTransformer
+	transactionService      transaction.PaymentService
 	paymentSvc              router.PaymentService
 	serverConfig            pkg.Server
 	validator               *http_validator.Validator
@@ -35,18 +36,17 @@ type http struct {
 	cfg                     *pkg.AppConfig
 }
 
-func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, ts service.TransactionService, cfg *pkg.AppConfig) Server {
+func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, ts transaction.PaymentService, cfg *pkg.AppConfig) Server {
 	v := http_validator.CreateValidator(validator.New())
 	e := echo.New()
 	e.Validator = v
-	//e.Use(http_context.EchoContextToContextMiddleware())
-	//e.Use(middleware.Logger())
-	//e.Use(middleware.Recover())
+	e.Use(http_context.EchoContextToContextMiddleware())
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
 	ut := transformers.CreateUserTransformer()
 	ot := transformers.CreateOrganizationTransformer()
-	tt := transformers.CreateTransactionTransformer()
 
 	return &http{
 		otpService:              ots,
@@ -55,7 +55,6 @@ func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService,
 		organizationService:     ogs,
 		organizationTransformer: ot,
 		transactionService:      ts,
-		transactionTransformer:  tt,
 		serverConfig:            sc,
 		paymentSvc:              paymnetSvc,
 		validator:               v,
@@ -76,7 +75,7 @@ func (h *http) appendRestRoutes(e *echo.Echo) {
 	apiGroup := e.Group("/api")
 	authRouter := router.CreateAuthRouterManager(apiGroup, h.validator, h.userService, h.otpService)
 	authRouter.PopulateRoutes()
-	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc)
+	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc, h.cfg.Server)
 	paymentRouter.PopulateRoutes()
 
 	otpGroup := apiGroup.Group("/otp")
@@ -90,8 +89,6 @@ func (h *http) appendGraphqlRoutes(e *echo.Echo) {
 		h.userTransformer,
 		h.organizationService,
 		h.organizationTransformer,
-		h.transactionService,
-		h.transactionTransformer,
 	)
 	c := graph.Config{Resolvers: resolver}
 	c.Directives.Auth = directives.Auth

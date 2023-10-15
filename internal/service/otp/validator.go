@@ -11,7 +11,7 @@ const (
 )
 
 type Validator interface {
-	Validate(owner int64, code string) error
+	Validate(owner string, code string) error
 }
 
 type validator struct {
@@ -23,7 +23,7 @@ func CreateValidator(r repository.OTPRepository, d bool) Validator {
 	return &validator{r, d}
 }
 
-func (v *validator) Validate(owner int64, code string) error {
+func (v *validator) Validate(owner string, code string) error {
 	if v.isDebug && code == devOTP {
 		return nil
 	}

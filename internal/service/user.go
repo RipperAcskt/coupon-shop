@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"shop-smart-api/internal/controller/http/types"
 	"shop-smart-api/internal/entity"
 	"shop-smart-api/internal/pkg/jwt"
@@ -25,7 +26,7 @@ func CreateUserService(
 	return &userService{f, cs, m, c, j}
 }
 
-func (uc *userService) Get(id int64) (*entity.User, error) {
+func (uc *userService) Get(id string) (*entity.User, error) {
 	return uc.finder.Find(id)
 }
 
@@ -46,7 +47,9 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel) 
 		u, err := uc.finder.FindByEmail(resource)
 		if err != nil {
 			createdUser, err := uc.creator.Create(resource, channel)
+			log.Println(createdUser)
 			if err != nil {
+				log.Println(err)
 				return nil, "", err
 			}
 
@@ -60,7 +63,12 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel) 
 
 	u, err := uc.finder.FindByPhone(resource)
 	if err != nil {
-		createdUser, _ := uc.creator.Create(resource, channel)
+		createdUser, err := uc.creator.Create(resource, channel)
+		log.Println(createdUser)
+		if err != nil {
+			log.Println(err)
+			return nil, "", err
+		}
 
 		token, err := uc.jwtManger.Generate(createdUser, false)
 		return createdUser, token, err

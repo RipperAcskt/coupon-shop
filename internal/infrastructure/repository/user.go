@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"shop-smart-api/internal/entity"
 )
@@ -14,7 +15,7 @@ func CreateUserRepository(db *sql.DB) UserRepository {
 	return &userRepository{db}
 }
 
-func (r *userRepository) Get(id int64) (*entity.User, error) {
+func (r *userRepository) Get(id string) (*entity.User, error) {
 	return r.executeQueryRow("SELECT * FROM users WHERE id = $1", id)
 }
 
@@ -38,17 +39,18 @@ func (r *userRepository) Store(
 	phone, email string,
 	roles []entity.Role,
 ) (*entity.User, error) {
-	return r.executeQueryRow(`INSERT INTO users (email, phone) VALUES ($1, $2) RETURNING id, email, phone, created_at, updated_at`, email, phone)
+	id := uuid.NewString()
+	return r.executeQueryRow(`INSERT INTO users (id, email, phone) VALUES ($1, $2, $3) RETURNING id, email, phone, created_at, updated_at, subscription`, id, email, phone)
 }
 
-func (r *userRepository) UpdateUser(id int64, email string) (*entity.User, error) {
+func (r *userRepository) UpdateUser(id string, email string) (*entity.User, error) {
 	return r.executeQueryRow(`
 		UPDATE users SET email = $1 WHERE id = $2
-		RETURNING id, email, phone, created_at, updated_at
+		RETURNING id, email, phone, created_at, updated_at, subscription
 	`, email, id)
 }
 
-func (r *userRepository) AddOrganization(id, organization int64, role *entity.Role) (*entity.User, error) {
+func (r *userRepository) AddOrganization(id string, organization int64, role *entity.Role) (*entity.User, error) {
 	if role == nil {
 		return r.executeQueryRow(`
 			UPDATE users SET organization_id = $1 WHERE id = $2
@@ -100,6 +102,7 @@ func (r *userRepository) executeQueryRow(query string, args ...any) (*entity.Use
 		&user.Phone,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Subscription,
 	)
 	if err != nil {
 		return nil, err
