@@ -13,6 +13,7 @@ type PaymentInterface interface {
 	CreatePayment(payment entity.Payment) (*entity.Payment, error)
 	GetPayments(userId string) ([]entity.Payment, error)
 	UpdatePayment(id string) (*entity.Payment, error)
+	UpdateSubscription(id, userId string) error
 }
 
 type Payment struct {
@@ -37,7 +38,7 @@ func New(r PaymentInterface, cfg *pkg.AppConfig) Payment {
 
 func (p Payment) CreatePayment(paymentRequest *entity.CreatePaymentRequest, userId string) (interface{}, error) {
 	id := uuid.NewString()
-	redirectUrl := p.cfg.Server.ServiceHost + "/api/payment/confirm/" + id
+	redirectUrl := p.cfg.Server.ServiceHost + "/api/payment/confirm/" + id + "/" + userId
 
 	payment := &yookassa.PaymentRequest{
 		Amount: yookassa.Amount{
@@ -63,10 +64,12 @@ func (p Payment) CreatePayment(paymentRequest *entity.CreatePaymentRequest, user
 	}
 
 	paymentTransfer := entity.Payment{
-		Id:     id,
-		Value:  am,
-		Status: false,
-		UserID: userId,
+		Id:          id,
+		Value:       am,
+		Status:      false,
+		UserID:      userId,
+		PaymentType: paymentRequest.PaymentType,
+		TypeID:      paymentRequest.TypeID,
 	}
 	paymentResp, err := p.repository.CreatePayment(paymentTransfer)
 	if err != nil {
@@ -82,7 +85,20 @@ func (p Payment) GetPayments(userId string) ([]entity.Payment, error) {
 	return p.repository.GetPayments(userId)
 }
 
-func (p Payment) ConfirmPayment(id string) error {
-	_, err := p.repository.UpdatePayment(id)
-	return err
+func (p Payment) ConfirmPayment(id, userId string) error {
+	payment, err := p.repository.UpdatePayment(id)
+	if err != nil {
+		return fmt.Errorf("update payment failed: %w", err)
+	}
+
+	switch payment.PaymentType {
+	case entity.Coupon:
+
+	case entity.Subscription:
+		err := p.repository.UpdateSubscription(payment.TypeID, userId)
+		if err != nil {
+			return fmt.Errorf("update subscription failed: %w", err)
+		}
+	}
+	return nil
 }

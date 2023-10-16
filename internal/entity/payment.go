@@ -15,8 +15,8 @@ type CreatePaymentRequest struct {
 type paymentType string
 
 const (
-	coupon       paymentType = "coupon"
-	subscription paymentType = "subscription"
+	Coupon       paymentType = "coupon"
+	Subscription paymentType = "subscription"
 )
 
 type Confirmation struct {
@@ -30,6 +30,8 @@ type Payment struct {
 	Status          bool
 	UserID          string
 	UpdatedAt       time.Time
+	PaymentType     paymentType
+	TypeID          string
 	RedirectURL     string
 	ConfirmationURL yookassa.ConfirmationInfo
 }

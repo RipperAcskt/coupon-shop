@@ -17,7 +17,7 @@ type paymentRouteManager struct {
 
 type PaymentService interface {
 	CreatePayment(paymentRequest *entity.CreatePaymentRequest, userId string) (interface{}, error)
-	ConfirmPayment(id string) error
+	ConfirmPayment(id, userId string) error
 	GetPayments(userId string) ([]entity.Payment, error)
 }
 
@@ -31,7 +31,7 @@ func CreatePaymentRouterManager(g *echo.Group, svc PaymentService, cfg pkg.Serve
 
 func (r *paymentRouteManager) PopulateRoutes() {
 	r.group.Add("POST", "/payment", r.createPayment, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/payment/confirm/:id", r.confirmPayment)
+	r.group.Add("GET", "/payment/confirm/:id/:user-id", r.confirmPayment)
 	r.group.Add("GET", "/payment", r.getPayments, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 }
 
@@ -51,9 +51,10 @@ func (r *paymentRouteManager) createPayment(c echo.Context) error {
 }
 
 func (r *paymentRouteManager) confirmPayment(c echo.Context) error {
+	userId := c.Param("user-id")
 	id := c.Param("id")
 
-	err := r.svc.ConfirmPayment(id)
+	err := r.svc.ConfirmPayment(id, userId)
 	if err != nil {
 		return err
 	}
