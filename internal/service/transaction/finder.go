@@ -6,8 +6,8 @@ import (
 
 type PaymentInterface interface {
 	CreatePayment(payment entity.Payment) (*entity.Payment, error)
-	GetPayments(userId string) (*entity.Payment, error)
-	UpdatePayment(id int64) (*entity.Payment, error)
+	GetPayments(userId string) ([]entity.Payment, error)
+	UpdatePayment(id string) (*entity.Payment, error)
 }
 
 type PaymentService struct {
@@ -22,10 +22,10 @@ func (s PaymentService) CreatePayment(payment entity.Payment) (*entity.Payment, 
 	return s.repository.CreatePayment(payment)
 }
 
-func (s PaymentService) GetPayments(userId string) (*entity.Payment, error) {
+func (s PaymentService) GetPayments(userId string) ([]entity.Payment, error) {
 	return s.repository.GetPayments(userId)
 }
 
-func (s PaymentService) UpdatePayment(id int64) (*entity.Payment, error) {
+func (s PaymentService) UpdatePayment(id string) (*entity.Payment, error) {
 	return s.repository.UpdatePayment(id)
 }

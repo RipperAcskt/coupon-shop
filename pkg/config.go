@@ -28,11 +28,12 @@ type Database struct {
 }
 
 type Server struct {
-	Port      string `yaml:"port"`
-	Secret    string `yaml:"secret"`
-	Env       string `yaml:"env"`
-	Debug     string `yaml:"debug"`
-	SmsApiKey string `yaml:"sms_api_key"`
+	Port        string `yaml:"port"`
+	Secret      string `yaml:"secret"`
+	Env         string `yaml:"env"`
+	Debug       string `yaml:"debug"`
+	SmsApiKey   string `yaml:"sms_api_key"`
+	ServiceHost string `yaml:"service_host"`
 }
 
 type AppConfig struct {

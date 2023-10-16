@@ -11,8 +11,8 @@ import (
 
 type PaymentInterface interface {
 	CreatePayment(payment entity.Payment) (*entity.Payment, error)
-	GetPayments(userId string) (*entity.Payment, error)
-	UpdatePayment(id int64) (*entity.Payment, error)
+	GetPayments(userId string) ([]entity.Payment, error)
+	UpdatePayment(id string) (*entity.Payment, error)
 }
 
 type Payment struct {
@@ -37,7 +37,7 @@ func New(r PaymentInterface, cfg *pkg.AppConfig) Payment {
 
 func (p Payment) CreatePayment(paymentRequest *entity.CreatePaymentRequest, userId string) (interface{}, error) {
 	id := uuid.NewString()
-	redirectUrl := "http://localhost:8080/api/payment/confrim/" + id
+	redirectUrl := p.cfg.Server.ServiceHost + "/api/payment/confirm/" + id
 
 	payment := &yookassa.PaymentRequest{
 		Amount: yookassa.Amount{
@@ -78,10 +78,11 @@ func (p Payment) CreatePayment(paymentRequest *entity.CreatePaymentRequest, user
 	return paymentResp, nil
 }
 
-func (p Payment) GetPayments(userId string) (*entity.Payment, error) {
+func (p Payment) GetPayments(userId string) ([]entity.Payment, error) {
 	return p.repository.GetPayments(userId)
 }
 
-func (p Payment) UpdatePayment(id int64) (*entity.Payment, error) {
-	return p.repository.UpdatePayment(id)
+func (p Payment) ConfirmPayment(id string) error {
+	_, err := p.repository.UpdatePayment(id)
+	return err
 }
