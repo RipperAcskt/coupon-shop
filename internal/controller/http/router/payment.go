@@ -1,11 +1,13 @@
 package router
 
 import (
+	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"shop-smart-api/internal/controller/http/middleware"
 	"shop-smart-api/internal/entity"
+	"shop-smart-api/internal/service/payment"
 	"shop-smart-api/pkg"
 )
 
@@ -19,6 +21,7 @@ type PaymentService interface {
 	CreatePayment(paymentRequest *entity.CreatePaymentRequest, userId string) (interface{}, error)
 	ConfirmPayment(id, userId string) error
 	GetPayments(userId string) ([]entity.Payment, error)
+	ActivatePayment(coupon string) error
 }
 
 func CreatePaymentRouterManager(g *echo.Group, svc PaymentService, cfg pkg.Server) RouteManager {
@@ -33,6 +36,7 @@ func (r *paymentRouteManager) PopulateRoutes() {
 	r.group.Add("POST", "/payment", r.createPayment, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/payment/confirm/:id/:user-id", r.confirmPayment)
 	r.group.Add("GET", "/payment", r.getPayments, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("POST", "/coupon/activate", r.activatePayment, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 }
 
 func (r *paymentRouteManager) createPayment(c echo.Context) error {
@@ -70,4 +74,22 @@ func (r *paymentRouteManager) getPayments(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *paymentRouteManager) activatePayment(c echo.Context) error {
+	coupon := struct {
+		Coupon string `json:"coupon"`
+	}{}
+	if err := c.Bind(&coupon); err != nil {
+		return err
+	}
+
+	err := r.svc.ActivatePayment(coupon.Coupon)
+	if err != nil {
+		if errors.Is(err, payment.ErrNoSuchCoupon) {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		return err
+	}
+	return c.JSON(http.StatusOK, "activated")
 }

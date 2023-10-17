@@ -12,10 +12,7 @@ const (
 )
 
 type Mailer struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	ApiMailer string `yaml:"api_mailer"`
 }
 
 type Yookassa struct {

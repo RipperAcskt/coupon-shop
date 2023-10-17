@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"github.com/albenik-go/yookassa"
 	"github.com/google/uuid"
+	"math/rand"
 	"shop-smart-api/internal/entity"
 	"shop-smart-api/pkg"
 	"strconv"
+	"time"
+)
+
+var (
+	ErrNoSuchCoupon = fmt.Errorf("no such coupon")
 )
 
 type PaymentInterface interface {
@@ -16,21 +22,48 @@ type PaymentInterface interface {
 	UpdateSubscription(id, userId string) error
 }
 
+type CodesInterface interface {
+	CreateCode(code entity.UsersCodes) (*entity.UsersCodes, error)
+	GetCodeByCoupon(coupon string) (*entity.UsersCodes, error)
+	GetCodeByUserID(userID string) ([]entity.UsersCodes, error)
+	DeleteCode(coupon string) (*entity.UsersCodes, error)
+}
+
+type SmsInterface interface {
+	SendCoupon(phone, code string)
+}
+
+type MailInterface interface {
+	SendCoupon(email, code string)
+}
+
+type UserRepository interface {
+	Get(id string) (*entity.User, error)
+}
+
 type Payment struct {
 	client *yookassa.Client
 
 	repository PaymentInterface
+	userRepo   UserRepository
+	smsClient  SmsInterface
+	mailClient MailInterface
+	codeRepo   CodesInterface
 
 	cfg *pkg.AppConfig
 }
 
-func New(r PaymentInterface, cfg *pkg.AppConfig) Payment {
+func New(r PaymentInterface, cfg *pkg.AppConfig, sms SmsInterface, mail MailInterface, userRepo UserRepository, code CodesInterface) Payment {
 	client := yookassa.New(cfg.Yookassa.ID, cfg.Yookassa.ApiKey)
 
 	return Payment{
 		client: client,
 
 		repository: r,
+		userRepo:   userRepo,
+		smsClient:  sms,
+		mailClient: mail,
+		codeRepo:   code,
 
 		cfg: cfg,
 	}
@@ -91,8 +124,41 @@ func (p Payment) ConfirmPayment(id, userId string) error {
 		return fmt.Errorf("update payment failed: %w", err)
 	}
 
+	var code string
+	for {
+		s := rand.NewSource(time.Now().UnixNano())
+		r := rand.New(s)
+		code = fmt.Sprint(r.Intn(999999-100000) + 100000)
+		_, err := p.codeRepo.GetCodeByCoupon(code)
+		if err != nil {
+			break
+		}
+	}
+
+	codeUser := entity.UsersCodes{
+		Id:     uuid.NewString(),
+		UserId: payment.UserID,
+		Coupon: code,
+	}
+
+	_, err = p.codeRepo.CreateCode(codeUser)
+	if err != nil {
+		return fmt.Errorf("create coupon failed: %w", err)
+	}
+
 	switch payment.PaymentType {
 	case entity.Coupon:
+		user, err := p.userRepo.Get(userId)
+		if err != nil {
+			return fmt.Errorf("get user failed: %w", err)
+		}
+
+		if user.Phone != "" {
+			p.smsClient.SendCoupon(user.Phone, code)
+		}
+		if user.Email != "" {
+			p.mailClient.SendCoupon(user.Email, code)
+		}
 
 	case entity.Subscription:
 		err := p.repository.UpdateSubscription(payment.TypeID, userId)
@@ -100,5 +166,19 @@ func (p Payment) ConfirmPayment(id, userId string) error {
 			return fmt.Errorf("update subscription failed: %w", err)
 		}
 	}
+	return nil
+}
+
+func (p Payment) ActivatePayment(coupon string) error {
+	_, err := p.codeRepo.GetCodeByCoupon(coupon)
+	if err != nil {
+		return ErrNoSuchCoupon
+	}
+
+	_, err = p.codeRepo.DeleteCode(coupon)
+	if err != nil {
+		return fmt.Errorf("delete coupon failed: %w", err)
+	}
+
 	return nil
 }
