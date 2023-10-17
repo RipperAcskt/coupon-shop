@@ -30,13 +30,14 @@ type http struct {
 	organizationTransformer transformers.OrganizationTransformer
 	transactionService      transaction.PaymentService
 	paymentSvc              router.PaymentService
+	subscriptionCouponSvc   router.SubscriptionCouponService
 	serverConfig            pkg.Server
 	validator               *http_validator.Validator
 	echo                    *echo.Echo
 	cfg                     *pkg.AppConfig
 }
 
-func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, ts transaction.PaymentService, cfg *pkg.AppConfig) Server {
+func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, subscriptionCouponSvc router.SubscriptionCouponService, ts transaction.PaymentService, cfg *pkg.AppConfig) Server {
 	v := http_validator.CreateValidator(validator.New())
 	e := echo.New()
 	e.Validator = v
@@ -55,6 +56,7 @@ func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService,
 		organizationService:     ogs,
 		organizationTransformer: ot,
 		transactionService:      ts,
+		subscriptionCouponSvc:   subscriptionCouponSvc,
 		serverConfig:            sc,
 		paymentSvc:              paymnetSvc,
 		validator:               v,
@@ -77,6 +79,9 @@ func (h *http) appendRestRoutes(e *echo.Echo) {
 	authRouter.PopulateRoutes()
 	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc, h.cfg.Server)
 	paymentRouter.PopulateRoutes()
+
+	subscriptionCouponRouter := router.CreateSubscriptionCouponService(apiGroup, h.subscriptionCouponSvc, h.cfg.Server)
+	subscriptionCouponRouter.PopulateRoutes()
 
 	otpGroup := apiGroup.Group("/otp")
 	otpRouter := router.CreateOTPRouterManager(otpGroup, h.validator, h.userService, h.otpService, h.serverConfig)

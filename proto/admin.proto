@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "coupon-shop-admin/proto";
+
+
+message Subscription {
+  string name = 1;
+  string description =2;
+  int32 price = 3;
+  int32 level = 4;
+}
+
+message SubscriptionsResponse {
+  repeated Subscription subs = 1;
+}
+
+message Empty {
+
+}
+
+message Media {
+  string ID = 1;
+  string path = 2;
+}
+
+message Coupon{
+  string ID = 1;
+  string name = 2;
+  string description = 4;
+  int32 price = 5;
+  int32 level = 6;
+  int32 percent = 7;
+  string contentUrl = 8;
+  Media media = 9;
+}
+
+message GetCouponsResponse {
+  repeated Coupon coupons = 1;
+}
+
+service AdminService  {
+  rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
+  rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
+}

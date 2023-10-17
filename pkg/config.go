@@ -34,6 +34,7 @@ type Server struct {
 	Debug       string `yaml:"debug"`
 	SmsApiKey   string `yaml:"sms_api_key"`
 	ServiceHost string `yaml:"service_host"`
+	Discount    string `yaml:"discount"`
 }
 
 type AppConfig struct {
