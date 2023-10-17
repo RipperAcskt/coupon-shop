@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/99designs/gqlgen v0.17.33
 	github.com/albenik-go/yookassa v0.0.0-20210427172105-d946e7f8aea1
+	github.com/alexeyco/unisender v0.0.0-20191212171727-2087538bf012
 	github.com/dmitriy-borisov/go-smsru v0.0.0-20161103204751-6ee35501547f
 	github.com/go-faker/faker/v4 v4.1.1
 	github.com/go-playground/validator/v10 v10.14.1
@@ -17,7 +18,6 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.3
 	google.golang.org/grpc v1.58.3
 	google.golang.org/protobuf v1.31.0
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -52,5 +52,4 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )

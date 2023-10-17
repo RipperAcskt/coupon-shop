@@ -2,31 +2,48 @@ package email
 
 import (
 	"fmt"
-	"gopkg.in/gomail.v2"
+	"github.com/alexeyco/unisender"
 	"log"
 )
 
 type Mailer interface {
 	Send(email, code string)
+	SendCoupon(email, code string)
 }
 
 type mailer struct {
-	d *gomail.Dialer
+	d *unisender.UniSender
 }
 
-func CreateMailer(d *gomail.Dialer) Mailer {
+func CreateMailer(d *unisender.UniSender) Mailer {
 	return &mailer{d}
 }
 
 func (m *mailer) Send(email, code string) {
-	message := gomail.NewMessage()
-	message.SetHeader("From", "from@gmail.com")
-	message.SetHeader("To", email)
-	message.SetHeader("Subject", "Shop smart authentication")
-	message.SetBody("text/plain", fmt.Sprintf("ОТП код: %s", code))
+	_, err := m.d.SendEmail(email).
+		SenderName("coupon-shop").
+		SenderEmail("hjadsfbnajv@gmail.com").
+		Subject("ОТП код").
+		Body(fmt.Sprintf("ОТП код: %v", code)).
+		LangDE().
+		ListID(1).
+		WrapTypeSkip().Execute()
 
-	if err := m.d.DialAndSend(message); err != nil {
-		log.Printf("Error: %s\n", err.Error())
-		return
+	if err != nil {
+		log.Printf("send email otp failed: %v", err)
+	}
+}
+
+func (m *mailer) SendCoupon(email, code string) {
+	_, err := m.d.SendEmail(email).
+		SenderName("coupon-shop").
+		SenderEmail("hjadsfbnajv@gmail.com").
+		Subject("ОТП код").
+		Body(fmt.Sprintf("Ваш купон: %s\nНазовите его администратору магазина для активации!", code)).
+		LangRU().
+		ListID(1).
+		WrapTypeSkip().Execute()
+	if err != nil {
+		log.Printf("send email otp failed: %v", err)
 	}
 }
