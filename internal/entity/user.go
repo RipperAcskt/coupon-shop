@@ -36,6 +36,7 @@ type User struct {
 	ID             string
 	Email          string
 	Phone          string
+	Code           string
 	OrganizationID *int64
 	Subscription   *string
 }

@@ -18,9 +18,12 @@ func CreateCreator(r repository.UserRepository) Creator {
 	return &creator{r}
 }
 
-func (c *creator) Create(phone string, chanel *types.Channel) (*entity.User, error) {
+func (c *creator) Create(resource string, chanel *types.Channel) (*entity.User, error) {
 	if chanel.IsEmail() {
-		return c.repository.Store("", phone, []entity.Role{entity.UserRole})
+		return c.repository.Store("", resource, "", []entity.Role{entity.UserRole})
 	}
-	return c.repository.Store(phone, "", []entity.Role{entity.UserRole})
+	if chanel.IsCode() {
+		return c.repository.Store("", "", resource, []entity.Role{entity.UserRole})
+	}
+	return c.repository.Store(resource, "", "", []entity.Role{entity.UserRole})
 }

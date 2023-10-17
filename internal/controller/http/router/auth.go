@@ -44,8 +44,11 @@ func (r *authRouteManager) sendCode(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := r.otpUseCase.Send(user, channel); err != nil {
-		return err
+	if !channel.IsCode() {
+		if err := r.otpUseCase.Send(user, channel); err != nil {
+			return err
+		}
+
 	}
 
 	response := &types.TokenResponse{Token: token}

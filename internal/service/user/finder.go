@@ -9,6 +9,7 @@ type Finder interface {
 	Find(id string) (*entity.User, error)
 	FindByPhone(phone string) (*entity.User, error)
 	FindByEmail(email string) (*entity.User, error)
+	FindByCode(code string) (*entity.User, error)
 	FindByOrganization(id int64) ([]*entity.User, error)
 }
 
@@ -30,6 +31,10 @@ func (f *finder) FindByPhone(phone string) (*entity.User, error) {
 
 func (f *finder) FindByEmail(email string) (*entity.User, error) {
 	return f.repository.GetByEmail(email)
+}
+
+func (f *finder) FindByCode(code string) (*entity.User, error) {
+	return f.repository.GetByCode(code)
 }
 
 func (f *finder) FindByOrganization(id int64) ([]*entity.User, error) {

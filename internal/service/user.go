@@ -60,7 +60,23 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel) 
 		token, err := uc.jwtManger.Generate(u, false)
 		return u, token, err
 	}
+	if channel.IsCode() {
+		u, err := uc.finder.FindByCode(resource)
+		if err != nil {
+			createdUser, err := uc.creator.Create(resource, channel)
+			log.Println(createdUser)
+			if err != nil {
+				log.Println(err)
+				return nil, "", err
+			}
 
+			token, err := uc.jwtManger.Generate(createdUser, false)
+			return u, token, err
+		}
+
+		token, err := uc.jwtManger.Generate(u, false)
+		return u, token, err
+	}
 	u, err := uc.finder.FindByPhone(resource)
 	if err != nil {
 		createdUser, err := uc.creator.Create(resource, channel)
