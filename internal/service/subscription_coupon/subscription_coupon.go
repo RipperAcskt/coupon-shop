@@ -161,3 +161,39 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 
 	return resultCoupons, nil
 }
+
+func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.OrganizationEntity, error) {
+	ctx := context.Background()
+	email, err := p.repository.GetEmailUser(userId)
+	if err != nil {
+		return entity.OrganizationEntity{}, err
+	}
+	orgID, err := p.repository.GetOrgId(email)
+	if err != nil {
+		return entity.OrganizationEntity{}, err
+	}
+	if orgID == "" {
+		return entity.OrganizationEntity{}, fmt.Errorf("user is not a member of organization")
+	}
+	orgInfo, err := p.client.GetOrganizationInfo(ctx, &adminpb.InfoOrganizationRequest{OrgId: orgID})
+	if orgInfo == nil {
+		return entity.OrganizationEntity{}, fmt.Errorf("info about company not found")
+	}
+	var Response = entity.OrganizationEntity{
+		Name:              orgInfo.Name,
+		ID:                orgInfo.ID,
+		EmailAdmin:        orgInfo.EmailAdmin,
+		LevelSubscription: int(orgInfo.LevelSubscription),
+		Members:           make([]entity.Member, len(orgInfo.Members)),
+	}
+	for i, v := range orgInfo.Members {
+		Response.Members[i] = entity.Member{
+			ID:             v.Id,
+			Email:          v.Email,
+			FirstName:      v.FirstName,
+			SecondName:     v.SecondName,
+			OrganizationID: v.OrgID,
+		}
+	}
+	return Response, nil
+}

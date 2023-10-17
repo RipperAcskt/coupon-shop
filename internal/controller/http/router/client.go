@@ -18,7 +18,7 @@ type subscriptionCouponsRouteManager struct {
 type SubscriptionCouponService interface {
 	GetSubscriptions(userId string) ([]entity.SubscriptionEntity, error)
 	GetCoupons(userId string) ([]entity.CouponEntity, error)
-	GetOrganizationInfo(userId string)
+	GetOrganizationInfo(userId string) (entity.OrganizationEntity, error)
 }
 
 func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponService, cfg pkg.Server) RouteManager {
@@ -55,7 +55,7 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 
 func (r *subscriptionCouponsRouteManager) getOrganizationInfo(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
-	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
+	resp, err := r.svc.GetOrganizationInfo(fmt.Sprint(id.(string)))
 	if err != nil {
 		return err
 	}
