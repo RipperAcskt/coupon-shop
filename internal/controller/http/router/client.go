@@ -18,6 +18,7 @@ type subscriptionCouponsRouteManager struct {
 type SubscriptionCouponService interface {
 	GetSubscriptions(userId string) ([]entity.SubscriptionEntity, error)
 	GetCoupons(userId string) ([]entity.CouponEntity, error)
+	GetOrganizationInfo(userId string)
 }
 
 func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponService, cfg pkg.Server) RouteManager {
@@ -31,6 +32,7 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons", r.getCoupons, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 }
 
 func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error {
@@ -43,6 +45,15 @@ func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error
 }
 
 func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
+	id := c.Get(middleware.CurrentUserKey)
+	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) getOrganizationInfo(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
 	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
 	if err != nil {
