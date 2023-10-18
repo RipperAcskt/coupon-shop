@@ -30,8 +30,8 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 }
 
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
-	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/coupons", r.getCoupons, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/coupons", r.getCoupons, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
 }
 

@@ -2,6 +2,8 @@ package subscription_coupon
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"shop-smart-api/internal/entity"
@@ -94,27 +96,32 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 	ctx := context.Background()
 	coupons, err := p.client.GetCouponsGRPC(ctx, &adminpb.Empty{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
 	}
 
 	userLevel, err := p.repository.GetUserSubscriptionLevel(userId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUserSubscriptionLevel failed: %w", err)
 	}
 
 	email, err := p.repository.GetEmailUser(userId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetEmailUser failed: %w", err)
 	}
 
 	orgID, err := p.repository.GetOrgId(email)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GetOrgId failed: %w", err)
+		}
 	}
 
 	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GetOrgSubscriptionLevel failed: %w", err)
+		}
+
 	}
 
 	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))

@@ -33,10 +33,10 @@ func CreatePaymentRouterManager(g *echo.Group, svc PaymentService, cfg pkg.Serve
 }
 
 func (r *paymentRouteManager) PopulateRoutes() {
-	r.group.Add("POST", "/payment", r.createPayment, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("POST", "/payment", r.createPayment, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/payment/confirm/:id/:user-id", r.confirmPayment)
-	r.group.Add("GET", "/payment", r.getPayments, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("POST", "/coupon/activate", r.activatePayment, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/payment", r.getPayments, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("POST", "/coupon/activate", r.activatePayment, middleware.AuthMiddleware(r.serverConfig.Secret))
 }
 
 func (r *paymentRouteManager) createPayment(c echo.Context) error {
