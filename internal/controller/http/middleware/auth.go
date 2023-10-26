@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	CurrentUserKey = "currentUser"
-	header         = "Authorization"
-	excludedString = "Bearer "
+	CurrentUserKey  = "currentUser"
+	header          = "Authorization"
+	excludedString  = "Bearer "
+	CurrentUserRole = "role"
 )
 
 func OTPAuthMiddleware(secret string) echo.MiddlewareFunc {

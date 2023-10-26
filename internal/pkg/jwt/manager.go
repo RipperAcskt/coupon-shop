@@ -22,8 +22,9 @@ func CreateManager(secret string) Manager {
 
 type UserClaims struct {
 	jwt.RegisteredClaims
-	UserId  string `json:"user_id"`
-	IsFully bool   `json:"is_fully"`
+	UserRole string `json:"role"`
+	UserId   string `json:"user_id"`
+	IsFully  bool   `json:"is_fully"`
 }
 
 func (j *jwtManager) Generate(user *entity.User, isFully bool) (string, error) {
@@ -32,8 +33,9 @@ func (j *jwtManager) Generate(user *entity.User, isFully bool) (string, error) {
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
-		UserId:  user.ID,
-		IsFully: isFully,
+		UserRole: "user",
+		UserId:   user.ID,
+		IsFully:  isFully,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 

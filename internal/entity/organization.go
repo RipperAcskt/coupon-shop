@@ -17,14 +17,20 @@ type OrganizationEntity struct {
 	ID                string   `json:"id"`
 	Name              string   `json:"name"`
 	EmailAdmin        string   `json:"email_admin"`
-	LevelSubscription int      `json:"levelSubscription"`
+	LevelSubscription int      `json:"level_subscription"`
+	ORGN              string   `json:"orgn"`
+	KPP               string   `json:"kpp"`
+	INN               string   `json:"inn"`
+	Address           string   `json:"address"`
 	Members           []Member `json:"members"`
+	//image
 }
 
 type Member struct {
 	ID             string `json:"id"`
 	Email          string `json:"email"`
 	FirstName      string `json:"name"`
-	SecondName     string `json:"secondName"`
-	OrganizationID string `json:"organizationID"`
+	SecondName     string `json:"second_name"`
+	OrganizationID string `json:"organization_ID"`
+	Role           string `json:"role"`
 }

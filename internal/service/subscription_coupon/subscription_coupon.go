@@ -191,6 +191,10 @@ func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.Organizat
 		ID:                orgInfo.ID,
 		EmailAdmin:        orgInfo.EmailAdmin,
 		LevelSubscription: int(orgInfo.LevelSubscription),
+		ORGN:              orgInfo.Orgn,
+		KPP:               orgInfo.Kpp,
+		INN:               orgInfo.Inn,
+		Address:           orgInfo.Kpp,
 		Members:           make([]entity.Member, len(orgInfo.Members)),
 	}
 	for i, v := range orgInfo.Members {
@@ -200,7 +204,30 @@ func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.Organizat
 			FirstName:      v.FirstName,
 			SecondName:     v.SecondName,
 			OrganizationID: v.OrgID,
+			Role:           v.Role,
 		}
 	}
+	return Response, nil
+}
+
+func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string) (string, error) {
+	ctx := context.Background()
+
+	response, err := p.client.UpdateOrganizationInfo(ctx, &adminpb.UpdateOrganizationRequest{
+		ID:                organizationEntity.ID,
+		Name:              organizationEntity.Name,
+		EmailAdmin:        organizationEntity.EmailAdmin,
+		LevelSubscription: int32(organizationEntity.LevelSubscription),
+		Orgn:              organizationEntity.ORGN,
+		Kpp:               organizationEntity.KPP,
+		Inn:               organizationEntity.INN,
+		Address:           organizationEntity.Address,
+		RoleUser:          role,
+	})
+	if err != nil {
+		return "", err
+	}
+	var Response = response.GetMessage()
+
 	return Response, nil
 }
