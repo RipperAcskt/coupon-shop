@@ -2,6 +2,8 @@ package subscription_coupon
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"shop-smart-api/internal/entity"
@@ -109,12 +111,17 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 
 	orgID, err := p.repository.GetOrgId(email)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
 	}
 
 	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+
 	}
 
 	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))
