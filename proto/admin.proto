@@ -49,7 +49,11 @@ message InfoOrganizationResponse {
   string name = 2;
   string emailAdmin = 3;
   int32 levelSubscription = 4;
-  repeated MemberInfo members = 5;
+  string orgn = 5;
+  string kpp = 6;
+  string inn = 7;
+  string address = 8;
+  repeated MemberInfo members = 9;
 }
 
 message MemberInfo {
@@ -58,9 +62,39 @@ message MemberInfo {
   string firstName = 3;
   string secondName = 4;
   string orgID = 5;
+  string role = 6;
 }
+
+message UpdateOrganizationRequest {
+  string ID = 1;
+  string name = 2;
+  string emailAdmin = 3;
+  int32 levelSubscription = 4;
+  string orgn = 5;
+  string kpp = 6;
+  string inn = 7;
+  string address = 8;
+  string roleUser = 9;
+}
+
+message UpdateOrganizationResponse {
+  string message = 1;
+}
+
+message UpdateMembersRequest {
+  repeated MemberInfo members= 1;
+  string organizationID = 2;
+  string roleUser = 3;
+}
+
+message UpdateMembersResponse {
+  string message = 1;
+}
+
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
+  rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
+  rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};
 }

@@ -75,7 +75,7 @@ func (h *http) RunServer() error {
 
 func (h *http) appendRestRoutes(e *echo.Echo) {
 	apiGroup := e.Group("/api")
-	authRouter := router.CreateAuthRouterManager(apiGroup, h.validator, h.userService, h.otpService)
+	authRouter := router.CreateAuthRouterManager(h.subscriptionCouponSvc, apiGroup, h.validator, h.userService, h.otpService)
 	authRouter.PopulateRoutes()
 	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc, h.cfg.Server)
 	paymentRouter.PopulateRoutes()

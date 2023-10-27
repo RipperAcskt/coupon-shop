@@ -8,7 +8,7 @@ import (
 )
 
 type Manager interface {
-	Generate(user *entity.User, isFully bool) (string, error)
+	Generate(user *entity.User, isFully bool, role string) (string, error)
 	Verify(accessToken string) (*UserClaims, error)
 }
 
@@ -22,18 +22,21 @@ func CreateManager(secret string) Manager {
 
 type UserClaims struct {
 	jwt.RegisteredClaims
-	UserId  string `json:"user_id"`
-	IsFully bool   `json:"is_fully"`
+	UserRole string `json:"role"`
+	UserId   string `json:"user_id"`
+	IsFully  bool   `json:"is_fully"`
 }
 
-func (j *jwtManager) Generate(user *entity.User, isFully bool) (string, error) {
+func (j *jwtManager) Generate(user *entity.User, isFully bool, role string) (string, error) {
+
 	claims := UserClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
-		UserId:  user.ID,
-		IsFully: isFully,
+		UserRole: role,
+		UserId:   user.ID,
+		IsFully:  isFully,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 

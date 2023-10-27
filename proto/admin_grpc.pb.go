@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AdminService_GetSubsGRPC_FullMethodName         = "/api.AdminService/GetSubsGRPC"
-	AdminService_GetCouponsGRPC_FullMethodName      = "/api.AdminService/GetCouponsGRPC"
-	AdminService_GetOrganizationInfo_FullMethodName = "/api.AdminService/GetOrganizationInfo"
+	AdminService_GetSubsGRPC_FullMethodName            = "/api.AdminService/GetSubsGRPC"
+	AdminService_GetCouponsGRPC_FullMethodName         = "/api.AdminService/GetCouponsGRPC"
+	AdminService_GetOrganizationInfo_FullMethodName    = "/api.AdminService/GetOrganizationInfo"
+	AdminService_UpdateOrganizationInfo_FullMethodName = "/api.AdminService/UpdateOrganizationInfo"
+	AdminService_UpdateMembersInfo_FullMethodName      = "/api.AdminService/UpdateMembersInfo"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -31,6 +33,8 @@ type AdminServiceClient interface {
 	GetSubsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetOrganizationInfo(ctx context.Context, in *InfoOrganizationRequest, opts ...grpc.CallOption) (*InfoOrganizationResponse, error)
+	UpdateOrganizationInfo(ctx context.Context, in *UpdateOrganizationRequest, opts ...grpc.CallOption) (*UpdateOrganizationResponse, error)
+	UpdateMembersInfo(ctx context.Context, in *UpdateMembersRequest, opts ...grpc.CallOption) (*UpdateMembersResponse, error)
 }
 
 type adminServiceClient struct {
@@ -68,6 +72,24 @@ func (c *adminServiceClient) GetOrganizationInfo(ctx context.Context, in *InfoOr
 	return out, nil
 }
 
+func (c *adminServiceClient) UpdateOrganizationInfo(ctx context.Context, in *UpdateOrganizationRequest, opts ...grpc.CallOption) (*UpdateOrganizationResponse, error) {
+	out := new(UpdateOrganizationResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateOrganizationInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) UpdateMembersInfo(ctx context.Context, in *UpdateMembersRequest, opts ...grpc.CallOption) (*UpdateMembersResponse, error) {
+	out := new(UpdateMembersResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateMembersInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility
@@ -75,6 +97,8 @@ type AdminServiceServer interface {
 	GetSubsGRPC(context.Context, *Empty) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(context.Context, *Empty) (*GetCouponsResponse, error)
 	GetOrganizationInfo(context.Context, *InfoOrganizationRequest) (*InfoOrganizationResponse, error)
+	UpdateOrganizationInfo(context.Context, *UpdateOrganizationRequest) (*UpdateOrganizationResponse, error)
+	UpdateMembersInfo(context.Context, *UpdateMembersRequest) (*UpdateMembersResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -90,6 +114,12 @@ func (UnimplementedAdminServiceServer) GetCouponsGRPC(context.Context, *Empty) (
 }
 func (UnimplementedAdminServiceServer) GetOrganizationInfo(context.Context, *InfoOrganizationRequest) (*InfoOrganizationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrganizationInfo not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateOrganizationInfo(context.Context, *UpdateOrganizationRequest) (*UpdateOrganizationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationInfo not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateMembersInfo(context.Context, *UpdateMembersRequest) (*UpdateMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembersInfo not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 
@@ -158,6 +188,42 @@ func _AdminService_GetOrganizationInfo_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_UpdateOrganizationInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrganizationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateOrganizationInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateOrganizationInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateOrganizationInfo(ctx, req.(*UpdateOrganizationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_UpdateMembersInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMembersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateMembersInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateMembersInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateMembersInfo(ctx, req.(*UpdateMembersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +242,14 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOrganizationInfo",
 			Handler:    _AdminService_GetOrganizationInfo_Handler,
+		},
+		{
+			MethodName: "UpdateOrganizationInfo",
+			Handler:    _AdminService_UpdateOrganizationInfo_Handler,
+		},
+		{
+			MethodName: "UpdateMembersInfo",
+			Handler:    _AdminService_UpdateMembersInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
