@@ -2,8 +2,10 @@ package email
 
 import (
 	"fmt"
-	"github.com/alexeyco/unisender"
 	"log"
+	"net/http"
+	"net/url"
+	"shop-smart-api/pkg"
 )
 
 type Mailer interface {
@@ -12,38 +14,65 @@ type Mailer interface {
 }
 
 type mailer struct {
-	d *unisender.UniSender
+	cfg *pkg.AppConfig
 }
 
-func CreateMailer(d *unisender.UniSender) Mailer {
-	return &mailer{d}
+func CreateMailer(cfg *pkg.AppConfig) Mailer {
+	return &mailer{cfg}
 }
 
 func (m *mailer) Send(email, code string) {
-	_, err := m.d.SendEmail(email).
-		SenderName("coupon-shop").
-		SenderEmail("hjadsfbnajv@gmail.com").
-		Subject("ОТП код").
-		Body(fmt.Sprintf("ОТП код: %v", code)).
-		LangDE().
-		ListID(1).
-		WrapTypeSkip().Execute()
+	baseURL := "https://api.unisender.com"
+	resource := "/ru/api/sendEmail"
+	params := url.Values{}
+	params.Add("format", "json")
+	params.Add("api_key", m.cfg.ApiMailer)
+	params.Add("email", email)
+	params.Add("sender_name", "Coupon shop")
+	params.Add("sender_email", "hjadsfbnajv@gmail.com")
+	params.Add("subject", "ОТП код")
+	params.Add("body", code)
+	params.Add("list_id", "1")
+	params.Add("lang", "ru")
 
+	u, err := url.ParseRequestURI(baseURL)
 	if err != nil {
-		log.Printf("send email otp failed: %v", err)
+		log.Printf("parse request uri failed: %v", err)
+	}
+	u.Path = resource
+	u.RawQuery = params.Encode()
+	urlStr := fmt.Sprintf("%v", u)
+
+	_, err = http.Get(urlStr)
+	if err != nil {
+		log.Printf("get failed: %v", err)
 	}
 }
 
 func (m *mailer) SendCoupon(email, code string) {
-	_, err := m.d.SendEmail(email).
-		SenderName("coupon-shop").
-		SenderEmail("hjadsfbnajv@gmail.com").
-		Subject("ОТП код").
-		Body(fmt.Sprintf("Ваш купон: %s\nНазовите его администратору магазина для активации!", code)).
-		LangRU().
-		ListID(1).
-		WrapTypeSkip().Execute()
+	baseURL := "https://api.unisender.com"
+	resource := "/ru/api/sendEmail"
+	params := url.Values{}
+	params.Add("format", "json")
+	params.Add("api_key", m.cfg.ApiMailer)
+	params.Add("email", email)
+	params.Add("sender_name", "Coupon shop")
+	params.Add("sender_email", "hjadsfbnajv@gmail.com")
+	params.Add("subject", "Купон")
+	params.Add("body", fmt.Sprintf("Ваш купон: %s\nНазовите его администратору магазина для активации!", code))
+	params.Add("list_id", "1")
+	params.Add("lang", "ru")
+
+	u, err := url.ParseRequestURI(baseURL)
 	if err != nil {
-		log.Printf("send email otp failed: %v", err)
+		log.Printf("parse request uri failed: %v", err)
+	}
+	u.Path = resource
+	u.RawQuery = params.Encode()
+	urlStr := fmt.Sprintf("%v", u)
+
+	_, err = http.Get(urlStr)
+	if err != nil {
+		log.Printf("get failed: %v", err)
 	}
 }

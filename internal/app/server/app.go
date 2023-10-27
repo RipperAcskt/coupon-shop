@@ -28,7 +28,7 @@ func CreateApplication(db *sql.DB, a *pkg.AppConfig) app.Application {
 }
 
 func (a *application) Run() error {
-	container := di.CreateContainer(a.database, a.appCfg.Server, a.appCfg.Mailer)
+	container := di.CreateContainer(a.database, a.appCfg.Server, a.appCfg.Mailer, *a.appCfg)
 
 	userService := container.ProvideUserService()
 	otpService := container.ProvideOTPService()
@@ -40,8 +40,8 @@ func (a *application) Run() error {
 	transactionRepository := repository.CreatePaymentRepository(a.database)
 	couponCodesRepo := repository.CreateCodesRepository(a.database)
 	userRepository := repository.CreateUserRepository(a.database)
-	mailClient := pkg.CreateMailDialer(a.appCfg.Mailer)
-	mailer := email.CreateMailer(mailClient)
+	mailer := email.CreateMailer(a.appCfg)
+	mailer.Send("7309333@gmail.com", "123")
 	paymentSvc := payment.New(transactionRepository, a.appCfg, smsClient, mailer, userRepository, couponCodesRepo)
 	subscriptionCouponRepository := repository.CreateSubscriptionCouponRepo(a.database)
 

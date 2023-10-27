@@ -170,6 +170,33 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 	return resultCoupons, nil
 }
 
+func (p SubscriptionCoupon) GetCouponsStandard() ([]entity.CouponEntity, error) {
+	ctx := context.Background()
+	coupons, err := p.client.GetCouponsGRPC(ctx, &adminpb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
+	}
+
+	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))
+	for i, v := range coupons.Coupons {
+		resultCoupons[i] = entity.CouponEntity{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       float32(v.Price),
+			Level:       v.Level,
+			Percent:     v.Percent,
+			ContentUrl:  v.ContentUrl,
+			Media: &entity.Media{
+				ID:   v.Media.ID,
+				Path: v.Media.Path,
+			},
+		}
+	}
+
+	return resultCoupons, nil
+}
+
 func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.OrganizationEntity, error) {
 	ctx := context.Background()
 	email, err := p.repository.GetEmailUser(userId)

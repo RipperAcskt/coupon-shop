@@ -70,11 +70,11 @@ func (uc *userService) ProvideOrCreate(resource string, channel *types.Channel, 
 				return nil, "", err
 			}
 
-			token, err := uc.jwtManger.Generate(createdUser, false, role)
+			token, err := uc.jwtManger.Generate(createdUser, true, role)
 			return u, token, err
 		}
 
-		token, err := uc.jwtManger.Generate(u, false, role)
+		token, err := uc.jwtManger.Generate(u, true, role)
 		return u, token, err
 	}
 	u, err := uc.finder.FindByPhone(resource)

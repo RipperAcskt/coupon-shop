@@ -49,7 +49,7 @@ func (r *userRepository) Store(
 func (r *userRepository) UpdateUser(id string, email string) (*entity.User, error) {
 	return r.executeQueryRow(`
 		UPDATE users SET email = $1 WHERE id = $2
-		RETURNING id, email, phone, codecreated_at, updated_at, subscription
+		RETURNING id, email, phone, code, created_at, updated_at, subscription
 	`, email, id)
 }
 

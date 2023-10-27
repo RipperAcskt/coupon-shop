@@ -27,10 +27,11 @@ type container struct {
 	database     *sql.DB
 	serverConfig pkg.Server
 	mailerConfig pkg.Mailer
+	appConfig    pkg.AppConfig
 }
 
-func CreateContainer(db *sql.DB, sc pkg.Server, mc pkg.Mailer) Container {
-	return &container{db, sc, mc}
+func CreateContainer(db *sql.DB, sc pkg.Server, mc pkg.Mailer, cfg pkg.AppConfig) Container {
+	return &container{db, sc, mc, cfg}
 }
 
 func (c *container) ProvideUserService() service.UserService {
@@ -64,9 +65,8 @@ func (c *container) resolveUserServiceDependencies() service.UserService {
 func (c *container) resolveOTPServiceDependencies() service.OTPService {
 	debug, _ := strconv.ParseBool(c.serverConfig.Debug)
 	smsClient := sms.CreateClient(smsru.NewClient(c.serverConfig.SmsApiKey), debug)
-	mailClient := pkg.CreateMailDialer(c.mailerConfig)
 
-	mailer := email.CreateMailer(mailClient)
+	mailer := email.CreateMailer(&c.appConfig)
 
 	otpGenerator := otp.CreateGenerator()
 	otpRepository := repository.CreateOTPRepository(c.database)

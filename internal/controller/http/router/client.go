@@ -19,6 +19,7 @@ type SubscriptionCouponService interface {
 	GetSubscriptions(userId string) ([]entity.SubscriptionEntity, error)
 	GetCoupons(userId string) ([]entity.CouponEntity, error)
 	GetOrganizationInfo(userId string) (entity.OrganizationEntity, error)
+	GetCouponsStandard() ([]entity.CouponEntity, error)
 	UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, id string) (string, error)
 	UpdateMembersInfo(members []entity.Member, role string, id string) (string, error)
 	GetRole(email string) (string, error)
@@ -38,9 +39,10 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons", r.getCoupons, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.OTPAuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/coupons/standard", r.getCouponsStandard)
+	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 }
 
 func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error {
@@ -55,6 +57,14 @@ func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error
 func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
 	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) error {
+	resp, err := r.svc.GetCouponsStandard()
 	if err != nil {
 		return err
 	}
