@@ -26,6 +26,7 @@ func OTPAuthMiddleware(secret string) echo.MiddlewareFunc {
 			}
 
 			c.Set(CurrentUserKey, verifiedClaims.UserId)
+			c.Set(CurrentUserRole, verifiedClaims.UserRole)
 			return next(c)
 		}
 	}
@@ -44,6 +45,7 @@ func AuthMiddleware(secret string) echo.MiddlewareFunc {
 			}
 
 			c.Set(CurrentUserKey, verifiedClaims.UserId)
+			c.Set(CurrentUserRole, verifiedClaims.UserRole)
 			return next(c)
 		}
 	}

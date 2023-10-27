@@ -81,10 +81,20 @@ message UpdateOrganizationResponse {
   string message = 1;
 }
 
+message UpdateMembersRequest {
+  repeated MemberInfo members= 1;
+  string organizationID = 2;
+  string roleUser = 3;
+}
+
+message UpdateMembersResponse {
+  string message = 1;
+}
+
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
   rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
+  rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};
 }
-

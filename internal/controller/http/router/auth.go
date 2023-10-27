@@ -9,6 +9,7 @@ import (
 )
 
 type authRouteManager struct {
+	scs         SubscriptionCouponService
 	group       *echo.Group
 	validator   *validator.Validator
 	userUseCase service.UserService
@@ -16,12 +17,13 @@ type authRouteManager struct {
 }
 
 func CreateAuthRouterManager(
+	scs SubscriptionCouponService,
 	g *echo.Group,
 	v *validator.Validator,
 	uc service.UserService,
 	oc service.OTPService,
 ) RouteManager {
-	return &authRouteManager{g, v, uc, oc}
+	return &authRouteManager{scs, g, v, uc, oc}
 }
 
 func (r *authRouteManager) PopulateRoutes() {
@@ -38,8 +40,16 @@ func (r *authRouteManager) sendCode(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	//TODO : here i can get role only if user is signed with email
+	role := ""
+	if channel.IsEmail() {
+		role, err = r.scs.GetRole(authRequest.Resource)
+		if err != nil {
+			return err
+		}
+	}
 
-	user, token, err := r.userUseCase.ProvideOrCreate(authRequest.Resource, channel)
+	user, token, err := r.userUseCase.ProvideOrCreate(authRequest.Resource, channel, role)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

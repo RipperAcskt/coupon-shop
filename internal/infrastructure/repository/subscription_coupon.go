@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 type subscriptionCouponRepo struct {
@@ -53,4 +54,16 @@ func (r *subscriptionCouponRepo) GetOrgId(email string) (string, error) {
 		return "", err
 	}
 	return orgID, nil
+}
+
+func (r *subscriptionCouponRepo) GetRole(email string) (string, error) {
+	role := ""
+	err := r.database.QueryRow("SELECT role FROM members WHERE email=$1", email).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+	if role == "" {
+		return "", fmt.Errorf("role for this user is not defined")
+	}
+	return role, nil
 }

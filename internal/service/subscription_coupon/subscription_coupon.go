@@ -17,6 +17,7 @@ type SubscriptionCouponInterface interface {
 	GetEmailUser(userID string) (string, error)
 	GetOrgId(email string) (string, error)
 	GetOrgSubscriptionLevel(orgID string) (int, error)
+	GetRole(email string) (string, error)
 }
 
 type SubscriptionCoupon struct {
@@ -210,11 +211,21 @@ func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.Organizat
 	return Response, nil
 }
 
-func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string) (string, error) {
+func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, userID string) (string, error) {
 	ctx := context.Background()
-
+	email, err := p.repository.GetEmailUser(userID)
+	if err != nil {
+		return "", err
+	}
+	orgID, err := p.repository.GetOrgId(email)
+	if err != nil {
+		return "", err
+	}
+	if orgID == "" {
+		return "", fmt.Errorf("user is not a member of organization")
+	}
 	response, err := p.client.UpdateOrganizationInfo(ctx, &adminpb.UpdateOrganizationRequest{
-		ID:                organizationEntity.ID,
+		ID:                orgID,
 		Name:              organizationEntity.Name,
 		EmailAdmin:        organizationEntity.EmailAdmin,
 		LevelSubscription: int32(organizationEntity.LevelSubscription),
@@ -230,4 +241,50 @@ func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.Org
 	var Response = response.GetMessage()
 
 	return Response, nil
+}
+
+func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role string, id string) (string, error) {
+	ctx := context.Background()
+	email, err := p.repository.GetEmailUser(id)
+	if err != nil {
+		return "", err
+	}
+	orgID, err := p.repository.GetOrgId(email)
+	if err != nil {
+		return "", err
+	}
+	if orgID == "" {
+		return "", fmt.Errorf("user is not a member of organization")
+	}
+	MembersRequest := make([]*adminpb.MemberInfo, 0)
+	for i := range members {
+		var MemberProto adminpb.MemberInfo
+		fmt.Println("before panic")
+		MemberProto.FirstName = members[i].FirstName
+		MemberProto.SecondName = members[i].SecondName
+		MemberProto.Email = members[i].Email
+		MemberProto.Role = members[i].Role
+		MembersRequest = append(MembersRequest, &MemberProto)
+		fmt.Println("after panic")
+	}
+	fmt.Println("Members", MembersRequest)
+	response, err := p.client.UpdateMembersInfo(ctx, &adminpb.UpdateMembersRequest{
+		Members:        MembersRequest,
+		OrganizationID: orgID,
+		RoleUser:       role,
+	})
+	if err != nil {
+		return "", err
+	}
+	var Response = response.GetMessage()
+
+	return Response, nil
+}
+
+func (p SubscriptionCoupon) GetRole(email string) (string, error) {
+	role, err := p.repository.GetRole(email)
+	if err != nil {
+		return "", err
+	}
+	return role, nil
 }

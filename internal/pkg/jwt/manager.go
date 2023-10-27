@@ -8,7 +8,7 @@ import (
 )
 
 type Manager interface {
-	Generate(user *entity.User, isFully bool) (string, error)
+	Generate(user *entity.User, isFully bool, role string) (string, error)
 	Verify(accessToken string) (*UserClaims, error)
 }
 
@@ -27,13 +27,14 @@ type UserClaims struct {
 	IsFully  bool   `json:"is_fully"`
 }
 
-func (j *jwtManager) Generate(user *entity.User, isFully bool) (string, error) {
+func (j *jwtManager) Generate(user *entity.User, isFully bool, role string) (string, error) {
+
 	claims := UserClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
 			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
-		UserRole: "user",
+		UserRole: role,
 		UserId:   user.ID,
 		IsFully:  isFully,
 	}
