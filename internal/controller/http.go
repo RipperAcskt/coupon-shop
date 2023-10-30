@@ -14,6 +14,7 @@ import (
 	"shop-smart-api/internal/controller/http/router"
 	http_validator "shop-smart-api/internal/controller/http/validator"
 	"shop-smart-api/internal/service"
+	"shop-smart-api/internal/service/transaction"
 	"shop-smart-api/pkg"
 )
 
@@ -27,20 +28,16 @@ type http struct {
 	userTransformer         transformers.UserTransformer
 	organizationService     service.OrganizationService
 	organizationTransformer transformers.OrganizationTransformer
-	transactionService      service.TransactionService
-	transactionTransformer  transformers.TransactionTransformer
+	transactionService      transaction.PaymentService
+	paymentSvc              router.PaymentService
+	subscriptionCouponSvc   router.SubscriptionCouponService
 	serverConfig            pkg.Server
 	validator               *http_validator.Validator
 	echo                    *echo.Echo
+	cfg                     *pkg.AppConfig
 }
 
-func CreateServer(
-	sc pkg.Server,
-	ots service.OTPService,
-	us service.UserService,
-	ogs service.OrganizationService,
-	ts service.TransactionService,
-) Server {
+func CreateServer(sc pkg.Server, ots service.OTPService, us service.UserService, ogs service.OrganizationService, paymnetSvc router.PaymentService, subscriptionCouponSvc router.SubscriptionCouponService, ts transaction.PaymentService, cfg *pkg.AppConfig) Server {
 	v := http_validator.CreateValidator(validator.New())
 	e := echo.New()
 	e.Validator = v
@@ -51,7 +48,6 @@ func CreateServer(
 
 	ut := transformers.CreateUserTransformer()
 	ot := transformers.CreateOrganizationTransformer()
-	tt := transformers.CreateTransactionTransformer()
 
 	return &http{
 		otpService:              ots,
@@ -60,10 +56,12 @@ func CreateServer(
 		organizationService:     ogs,
 		organizationTransformer: ot,
 		transactionService:      ts,
-		transactionTransformer:  tt,
+		subscriptionCouponSvc:   subscriptionCouponSvc,
 		serverConfig:            sc,
+		paymentSvc:              paymnetSvc,
 		validator:               v,
 		echo:                    e,
+		cfg:                     cfg,
 	}
 }
 
@@ -77,8 +75,13 @@ func (h *http) RunServer() error {
 
 func (h *http) appendRestRoutes(e *echo.Echo) {
 	apiGroup := e.Group("/api")
-	authRouter := router.CreateAuthRouterManager(apiGroup, h.validator, h.userService, h.otpService)
+	authRouter := router.CreateAuthRouterManager(h.subscriptionCouponSvc, apiGroup, h.validator, h.userService, h.otpService)
 	authRouter.PopulateRoutes()
+	paymentRouter := router.CreatePaymentRouterManager(apiGroup, h.paymentSvc, h.cfg.Server)
+	paymentRouter.PopulateRoutes()
+
+	subscriptionCouponRouter := router.CreateSubscriptionCouponService(apiGroup, h.subscriptionCouponSvc, h.cfg.Server)
+	subscriptionCouponRouter.PopulateRoutes()
 
 	otpGroup := apiGroup.Group("/otp")
 	otpRouter := router.CreateOTPRouterManager(otpGroup, h.validator, h.userService, h.otpService, h.serverConfig)
@@ -91,8 +94,6 @@ func (h *http) appendGraphqlRoutes(e *echo.Echo) {
 		h.userTransformer,
 		h.organizationService,
 		h.organizationTransformer,
-		h.transactionService,
-		h.transactionTransformer,
 	)
 	c := graph.Config{Resolvers: resolver}
 	c.Directives.Auth = directives.Auth

@@ -14,7 +14,7 @@ func CreateOTPRepository(db *sql.DB) OTPRepository {
 	return &otpRepository{db}
 }
 
-func (r *otpRepository) Store(owner int64, code string) (*entity.OTP, error) {
+func (r *otpRepository) Store(owner string, code string) (*entity.OTP, error) {
 	return r.executeQueryRow(`
 		INSERT INTO otp (code, owner_id, expired_at) VALUES ($1, $2, $3) 
 		RETURNING id, code, is_used, owner_id, created_at, updated_at, expired_at
@@ -22,7 +22,7 @@ func (r *otpRepository) Store(owner int64, code string) (*entity.OTP, error) {
 	)
 }
 
-func (r *otpRepository) GetByOwnerAndCode(owner int64, code string) (*entity.OTP, error) {
+func (r *otpRepository) GetByOwnerAndCode(owner string, code string) (*entity.OTP, error) {
 	return r.executeQueryRow("SELECT * FROM otp WHERE owner_id = $1 AND code = $2", owner, code)
 }
 

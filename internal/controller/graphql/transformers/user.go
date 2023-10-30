@@ -32,7 +32,7 @@ func (t *userTransformer) TransformToModel(u *entity.User) *model.User {
 	organizationId := t.resolveOrganization(u.OrganizationID)
 
 	return &model.User{
-		ID:             strconv.Itoa(int(u.ID)),
+		ID:             u.ID,
 		Email:          &u.Email,
 		Phone:          u.Phone,
 		Roles:          t.parseRoles(u.Roles),

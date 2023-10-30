@@ -1,14 +1,9 @@
 package pkg
 
 import (
-	"crypto/tls"
-	"gopkg.in/gomail.v2"
+	"github.com/alexeyco/unisender"
 )
 
-func CreateMailDialer(cfg Mailer) *gomail.Dialer {
-	d := gomail.NewDialer(cfg.Host, cfg.Port, cfg.Username, cfg.Password)
-
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-	return d
+func CreateMailDialer(cfg Mailer) *unisender.UniSender {
+	return unisender.New(cfg.ApiMailer).SetLanguageEnglish()
 }

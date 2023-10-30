@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "coupon-shop-admin/proto";
+
+
+message Subscription {
+  string name = 1;
+  string description =2;
+  int32 price = 3;
+  int32 level = 4;
+}
+
+message SubscriptionsResponse {
+  repeated Subscription subs = 1;
+}
+
+message Empty {
+
+}
+
+message Media {
+  string ID = 1;
+  string path = 2;
+}
+
+message Coupon{
+  string ID = 1;
+  string name = 2;
+  string description = 4;
+  int32 price = 5;
+  int32 level = 6;
+  int32 percent = 7;
+  string contentUrl = 8;
+  Media media = 9;
+}
+
+message GetCouponsResponse {
+  repeated Coupon coupons = 1;
+}
+
+message InfoOrganizationRequest {
+  string orgId = 1;
+}
+
+message InfoOrganizationResponse {
+  string ID = 1;
+  string name = 2;
+  string emailAdmin = 3;
+  int32 levelSubscription = 4;
+  string orgn = 5;
+  string kpp = 6;
+  string inn = 7;
+  string address = 8;
+  repeated MemberInfo members = 9;
+}
+
+message MemberInfo {
+  string id = 1;
+  string email = 2;
+  string firstName = 3;
+  string secondName = 4;
+  string orgID = 5;
+  string role = 6;
+}
+
+message UpdateOrganizationRequest {
+  string ID = 1;
+  string name = 2;
+  string emailAdmin = 3;
+  int32 levelSubscription = 4;
+  string orgn = 5;
+  string kpp = 6;
+  string inn = 7;
+  string address = 8;
+  string roleUser = 9;
+}
+
+message UpdateOrganizationResponse {
+  string message = 1;
+}
+
+message UpdateMembersRequest {
+  repeated MemberInfo members= 1;
+  string organizationID = 2;
+  string roleUser = 3;
+}
+
+message UpdateMembersResponse {
+  string message = 1;
+}
+
+service AdminService  {
+  rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
+  rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
+  rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
+  rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
+  rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};
+}

@@ -7,18 +7,19 @@ import (
 
 type (
 	UserRepository interface {
-		Get(id int64) (*entity.User, error)
+		Get(id string) (*entity.User, error)
 		GetByPhone(phone string) (*entity.User, error)
 		GetByEmail(email string) (*entity.User, error)
+		GetByCode(code string) (*entity.User, error)
 		GetByOrganization(id int64) ([]*entity.User, error)
 		GetAll() ([]*entity.User, error)
-		Store(phone, email string, roles []entity.Role) (*entity.User, error)
-		UpdateUser(id int64, email string) (*entity.User, error)
-		AddOrganization(id, organization int64, role *entity.Role) (*entity.User, error)
+		Store(phone, email, code string, roles []entity.Role) (*entity.User, error)
+		UpdateUser(id string, email string) (*entity.User, error)
+		AddOrganization(id string, organization int64, role *entity.Role) (*entity.User, error)
 	}
 	OTPRepository interface {
-		GetByOwnerAndCode(owner int64, code string) (*entity.OTP, error)
-		Store(owner int64, code string) (*entity.OTP, error)
+		GetByOwnerAndCode(owner string, code string) (*entity.OTP, error)
+		Store(owner string, code string) (*entity.OTP, error)
 		Use(otp *entity.OTP) error
 	}
 	OrganizationRepository interface {

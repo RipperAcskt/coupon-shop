@@ -8,6 +8,7 @@ import (
 
 type Client interface {
 	Send(phone, code string)
+	SendCoupon(phone, code string)
 }
 
 type smsClient struct {
@@ -20,11 +21,29 @@ func CreateClient(c *sms.SmsClient, d bool) Client {
 }
 
 func (c *smsClient) Send(phone, code string) {
+
 	if c.isDebug {
 		return
 	}
 
 	msg := sms.NewSms(phone, fmt.Sprintf("ОТП код: %s", code))
+
+	res, err := c.client.SmsSend(msg)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+		return
+	}
+
+	log.Printf("Status = %d, Ids = %v, Balance = %f", res.Status, res.Ids, res.Balance)
+}
+
+func (c *smsClient) SendCoupon(phone, code string) {
+
+	if c.isDebug {
+		return
+	}
+
+	msg := sms.NewSms(phone, fmt.Sprintf("Ваш купон: %s\nНазовите его администратору магазина для активации!", code))
 
 	res, err := c.client.SmsSend(msg)
 	if err != nil {

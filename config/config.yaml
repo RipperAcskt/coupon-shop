@@ -6,8 +6,10 @@ server:
   env: ${APP_ENV}
   debug: ${APP_DEBUG}
   sms_api_key: ${SMS_API_KEY}
+  service_host: ${SERVICE_HOST}
+  discount: ${DISCOUNT}
 mailer:
-  host: ${MAILER_HOST}
-  port: ${MAILER_PORT}
-  username: ${MAILER_USERNAME}
-  password: ${MAILER_PASSWORD}
+  api_mailer: ${API_MAILER}
+yookassa:
+  id: ${YOOKASSA_ID}
+  api_key: ${YOOKASSA_API_KEY}

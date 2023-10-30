@@ -20,17 +20,18 @@ type Container interface {
 	ProvideUserService() service.UserService
 	ProvideOTPService() service.OTPService
 	ProvideOrganizationService() service.OrganizationService
-	ProvideTransactionService() service.TransactionService
+	ProvideTransactionService() transaction.PaymentService
 }
 
 type container struct {
 	database     *sql.DB
 	serverConfig pkg.Server
 	mailerConfig pkg.Mailer
+	appConfig    pkg.AppConfig
 }
 
-func CreateContainer(db *sql.DB, sc pkg.Server, mc pkg.Mailer) Container {
-	return &container{db, sc, mc}
+func CreateContainer(db *sql.DB, sc pkg.Server, mc pkg.Mailer, cfg pkg.AppConfig) Container {
+	return &container{db, sc, mc, cfg}
 }
 
 func (c *container) ProvideUserService() service.UserService {
@@ -45,7 +46,7 @@ func (c *container) ProvideOrganizationService() service.OrganizationService {
 	return c.resolveOrganizationServiceDependencies()
 }
 
-func (c *container) ProvideTransactionService() service.TransactionService {
+func (c *container) ProvideTransactionService() transaction.PaymentService {
 	return c.resolveTransactionServiceDependencies()
 }
 
@@ -64,9 +65,8 @@ func (c *container) resolveUserServiceDependencies() service.UserService {
 func (c *container) resolveOTPServiceDependencies() service.OTPService {
 	debug, _ := strconv.ParseBool(c.serverConfig.Debug)
 	smsClient := sms.CreateClient(smsru.NewClient(c.serverConfig.SmsApiKey), debug)
-	mailClient := pkg.CreateMailDialer(c.mailerConfig)
 
-	mailer := email.CreateMailer(mailClient)
+	mailer := email.CreateMailer(&c.appConfig)
 
 	otpGenerator := otp.CreateGenerator()
 	otpRepository := repository.CreateOTPRepository(c.database)
@@ -84,9 +84,9 @@ func (c *container) resolveOrganizationServiceDependencies() service.Organizatio
 	return service.CreateOrganizationService(organizationFinder)
 }
 
-func (c *container) resolveTransactionServiceDependencies() service.TransactionService {
-	transactionRepository := repository.CreateTransactionRepository(c.database)
-	transactionFinder := transaction.CreateFinder(transactionRepository)
+func (c *container) resolveTransactionServiceDependencies() transaction.PaymentService {
+	transactionRepository := repository.CreatePaymentRepository(c.database)
+	transactionFinder := transaction.CreatePaymentService(transactionRepository)
 
-	return service.CreateTransactionService(transactionFinder)
+	return transactionFinder
 }

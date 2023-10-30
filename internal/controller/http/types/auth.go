@@ -21,6 +21,7 @@ type (
 const (
 	Phone Channel = "phone"
 	Email Channel = "email"
+	Code  Channel = "code"
 )
 
 func (c Channel) String() string {
@@ -35,9 +36,14 @@ func (c Channel) IsPhone() bool {
 	return c == Phone
 }
 
+func (c Channel) IsCode() bool {
+	return c == Code
+}
+
 var channels = []Channel{
 	Phone,
 	Email,
+	Code,
 }
 
 func ResolveByChannel(ch string) (*Channel, error) {

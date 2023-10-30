@@ -33,10 +33,12 @@ type User struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Roles          []Role
-	ID             int64
+	ID             string
 	Email          string
 	Phone          string
+	Code           string
 	OrganizationID *int64
+	Subscription   *string
 }
 
 func (u *User) IsUser() bool {
