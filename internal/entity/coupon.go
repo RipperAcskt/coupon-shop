@@ -1,5 +1,16 @@
 package entity
 
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrNoAnyCoupons       = errors.New("there is not a single coupon")
+	ErrCouponDoesNotExist = errors.New("coupon does not exist")
+	ErrNoMedia            = fmt.Errorf("no media")
+)
+
 type Media struct {
 	ID   string `json:"ID,omitempty"`
 	Path string `json:"path,omitempty"`
@@ -14,4 +25,9 @@ type CouponEntity struct {
 	Percent     int32   `json:"percent"`
 	ContentUrl  string  `json:"content_url"`
 	Media       *Media  `json:"media"`
+}
+
+type PaginationInfo struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
 }

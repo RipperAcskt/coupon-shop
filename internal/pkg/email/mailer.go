@@ -43,10 +43,14 @@ func (m *mailer) Send(email, code string) {
 	u.RawQuery = params.Encode()
 	urlStr := fmt.Sprintf("%v", u)
 
-	_, err = http.Get(urlStr)
+	resp, err := http.Get(urlStr)
 	if err != nil {
 		log.Printf("get failed: %v", err)
 	}
+
+	var b []byte
+	resp.Body.Read(b)
+	log.Println(string(b))
 }
 
 func (m *mailer) SendCoupon(email, code string) {

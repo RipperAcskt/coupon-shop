@@ -41,7 +41,6 @@ func (a *application) Run() error {
 	couponCodesRepo := repository.CreateCodesRepository(a.database)
 	userRepository := repository.CreateUserRepository(a.database)
 	mailer := email.CreateMailer(a.appCfg)
-	mailer.Send("7309333@gmail.com", "123")
 	paymentSvc := payment.New(transactionRepository, a.appCfg, smsClient, mailer, userRepository, couponCodesRepo)
 	subscriptionCouponRepository := repository.CreateSubscriptionCouponRepo(a.database)
 

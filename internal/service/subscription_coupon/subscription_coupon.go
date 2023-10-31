@@ -18,6 +18,7 @@ type SubscriptionCouponInterface interface {
 	GetOrgId(email string) (string, error)
 	GetOrgSubscriptionLevel(orgID string) (int, error)
 	GetRole(email string) (string, error)
+	GetCouponsPagination(pagination entity.PaginationInfo) ([]entity.CouponEntity, error)
 }
 
 type SubscriptionCoupon struct {
@@ -314,4 +315,8 @@ func (p SubscriptionCoupon) GetRole(email string) (string, error) {
 		return "", err
 	}
 	return role, nil
+}
+
+func (p SubscriptionCoupon) GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error) {
+	return p.repository.GetCouponsPagination(info)
 }

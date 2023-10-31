@@ -23,6 +23,7 @@ type SubscriptionCouponService interface {
 	UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, id string) (string, error)
 	UpdateMembersInfo(members []entity.Member, role string, id string) (string, error)
 	GetRole(email string) (string, error)
+	GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error)
 }
 type UpdateResponse struct {
 	Message string `json:"message"`
@@ -39,6 +40,7 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons", r.getCoupons, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("POST", "/coupons/pagination", r.getCouponsPagination, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons/standard", r.getCouponsStandard)
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
@@ -57,6 +59,18 @@ func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error
 func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
 	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) getCouponsPagination(c echo.Context) error {
+	info := entity.PaginationInfo{}
+	if err := c.Bind(&info); err != nil {
+		return err
+	}
+	resp, err := r.svc.GetCouponsPagination(info)
 	if err != nil {
 		return err
 	}
