@@ -25,6 +25,7 @@ type CouponEntity struct {
 	Percent     int32   `json:"percent"`
 	ContentUrl  string  `json:"content_url"`
 	Media       *Media  `json:"media"`
+	Region      string  `json:"region"`
 }
 
 type PaginationInfo struct {

@@ -34,6 +34,7 @@ message Coupon{
   int32 percent = 7;
   string contentUrl = 8;
   Media media = 9;
+  string region = 10;
 }
 
 message GetCouponsResponse {
@@ -91,9 +92,14 @@ message UpdateMembersResponse {
   string message = 1;
 }
 
+message Region {
+  string region = 1;
+}
+
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
+  rpc GetCouponsByRegionGRPC(Region) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
   rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
   rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};
