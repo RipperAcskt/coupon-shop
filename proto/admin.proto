@@ -35,6 +35,8 @@ message Coupon{
   string contentUrl = 8;
   Media media = 9;
   string region = 10;
+  string category = 11;
+  string subcategory = 12;
 }
 
 message GetCouponsResponse {
@@ -96,10 +98,16 @@ message Region {
   string region = 1;
 }
 
+message Category {
+  string name = 1;
+  bool subcategory = 2;
+}
+
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
   rpc GetCouponsByRegionGRPC(Region) returns (GetCouponsResponse){};
+  rpc GetCouponsByCategoryGRPC(Category) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
   rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
   rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};

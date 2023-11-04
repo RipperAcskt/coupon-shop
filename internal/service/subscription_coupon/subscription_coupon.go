@@ -140,7 +140,9 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
-			Region: v.Region,
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
 		}
 	}
 	var subscriptionLevel int32
@@ -218,7 +220,89 @@ func (p SubscriptionCoupon) GetCouponsByRegion(userId, region string) ([]entity.
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
-			Region: v.Region,
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
+		}
+	}
+	var subscriptionLevel int32
+	if userLevel >= orgLevel {
+		subscriptionLevel = int32(userLevel)
+	} else {
+		subscriptionLevel = int32(orgLevel)
+	}
+	if subscriptionLevel == 0 {
+		return resultCoupons, nil
+	}
+	for i, v := range resultCoupons {
+		if v.Level <= subscriptionLevel {
+			resultCoupons[i].Price = 0
+		}
+
+		if v.Level > subscriptionLevel {
+			discount, err := strconv.Atoi(os.Getenv("DISCOUNT"))
+			if err != nil {
+				return nil, err
+			}
+			if discount < 0 || discount > 100 {
+				return nil, fmt.Errorf("discount is invalid, it must be >= 0 and <= 100")
+			}
+			resultCoupons[i].Price *= float32(100-discount) / 100
+		}
+	}
+
+	return resultCoupons, nil
+}
+
+func (p SubscriptionCoupon) GetCouponsByCategory(userId string, category entity.Category) ([]entity.CouponEntity, error) {
+	ctx := context.Background()
+	coupons, err := p.client.GetCouponsByCategoryGRPC(ctx, &adminpb.Category{Name: category.Name, Subcategory: category.Subcategory})
+	if err != nil {
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
+	}
+
+	userLevel, err := p.repository.GetUserSubscriptionLevel(userId)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserSubscriptionLevel failed: %w", err)
+	}
+
+	email, err := p.repository.GetEmailUser(userId)
+	if err != nil {
+		return nil, fmt.Errorf("GetEmailUser failed: %w", err)
+	}
+
+	orgID, err := p.repository.GetOrgId(email)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GetOrgId failed: %w", err)
+		}
+	}
+
+	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GetOrgSubscriptionLevel failed: %w", err)
+		}
+
+	}
+
+	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))
+	for i, v := range coupons.Coupons {
+		resultCoupons[i] = entity.CouponEntity{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       float32(v.Price),
+			Level:       v.Level,
+			Percent:     v.Percent,
+			ContentUrl:  v.ContentUrl,
+			Media: &entity.Media{
+				ID:   v.Media.ID,
+				Path: v.Media.Path,
+			},
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
 		}
 	}
 	var subscriptionLevel int32
@@ -300,6 +384,36 @@ func (p SubscriptionCoupon) GetCouponsStandardByRegion(region string) ([]entity.
 				Path: v.Media.Path,
 			},
 			Region: v.Region,
+		}
+	}
+
+	return resultCoupons, nil
+}
+
+func (p SubscriptionCoupon) GetCouponsStandardByCategory(category entity.Category) ([]entity.CouponEntity, error) {
+	ctx := context.Background()
+	coupons, err := p.client.GetCouponsByCategoryGRPC(ctx, &adminpb.Category{Name: category.Name, Subcategory: category.Subcategory})
+	if err != nil {
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
+	}
+
+	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))
+	for i, v := range coupons.Coupons {
+		resultCoupons[i] = entity.CouponEntity{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       float32(v.Price),
+			Level:       v.Level,
+			Percent:     v.Percent,
+			ContentUrl:  v.ContentUrl,
+			Media: &entity.Media{
+				ID:   v.Media.ID,
+				Path: v.Media.Path,
+			},
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
 		}
 	}
 

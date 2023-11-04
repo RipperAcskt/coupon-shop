@@ -26,9 +26,16 @@ type CouponEntity struct {
 	ContentUrl  string  `json:"content_url"`
 	Media       *Media  `json:"media"`
 	Region      string  `json:"region"`
+	Category    string  `json:"category"`
+	Subcategory string  `json:"subcategory"`
 }
 
 type PaginationInfo struct {
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
+}
+
+type Category struct {
+	Name        string
+	Subcategory bool
 }
