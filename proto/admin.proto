@@ -39,6 +39,25 @@ message Coupon{
   string subcategory = 12;
 }
 
+message RegionResponse{
+  repeated Region regions = 1;
+}
+
+message CategoryResponse{
+  string ID = 1;
+  string name = 2;
+  repeated SubcategoryResponse subcategories = 3;
+}
+
+message GetCategoryResponse{
+  repeated CategoryResponse categories = 1;
+}
+
+message SubcategoryResponse{
+  string ID = 1;
+  string name = 2;
+}
+
 message GetCouponsResponse {
   repeated Coupon coupons = 1;
 }
@@ -106,6 +125,8 @@ message Category {
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
+  rpc GetCategoriesGRPC(Empty) returns (GetCategoryResponse){};
+  rpc GetRegionsGRPC(Empty) returns (RegionResponse){};
   rpc GetCouponsByRegionGRPC(Region) returns (GetCouponsResponse){};
   rpc GetCouponsByCategoryGRPC(Category) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};

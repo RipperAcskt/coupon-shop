@@ -29,6 +29,8 @@ type SubscriptionCouponService interface {
 	UpdateMembersInfo(members []entity.Member, role string, id string) (string, error)
 	GetRole(email string) (string, error)
 	GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error)
+	GetCategories() ([]entity.CategorySubcategory, error)
+	GetRegions() ([]entity.Region, error)
 }
 type UpdateResponse struct {
 	Message string `json:"message"`
@@ -45,8 +47,8 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons", r.getCoupons, middleware.AuthMiddleware(r.serverConfig.Secret))
-	//r.group.Add("GET", "/coupons/filter/region/:region", r.getCouponsByRegion, middleware.AuthMiddleware(r.serverConfig.Secret))
-	//r.group.Add("GET", "/coupons/filter/category/:category", r.getCouponsByCategory, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/categories", r.getCategories)
+	r.group.Add("GET", "/regions", r.getRegions)
 	//r.group.Add("POST", "/coupons/pagination", r.getCouponsPagination, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons/standard", r.getCouponsStandard)
 	//r.group.Add("GET", "/coupons/standard/filter/region/:region", r.getCouponsStandardByRegion)
@@ -54,11 +56,20 @@ func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
+
 }
 
 func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
 	resp, err := r.svc.GetSubscriptions(fmt.Sprint(id.(string)))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) getRegions(c echo.Context) error {
+	resp, err := r.svc.GetRegions()
 	if err != nil {
 		return err
 	}
@@ -148,63 +159,6 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	return c.JSON(http.StatusOK, respSlice)
 }
 
-//func (r *subscriptionCouponsRouteManager) getCouponsByRegion(c echo.Context) error {
-//	id := c.Get(middleware.CurrentUserKey)
-//	region := c.Param("region")
-//	resp, err := r.svc.GetCouponsByRegion(fmt.Sprint(id.(string)), region)
-//	if err != nil {
-//		return err
-//	}
-//	return c.JSON(http.StatusOK, resp)
-//}
-//
-//func (r *subscriptionCouponsRouteManager) getCouponsByCategory(c echo.Context) error {
-//	id := c.Get(middleware.CurrentUserKey)
-//	category := c.Param("category")
-//	subcategory := c.Request().Header["Subcategory"][0]
-//	var cat entity.Category
-//	cat.Name = category
-//	if subcategory == "true" {
-//		cat.Subcategory = true
-//	} else {
-//		cat.Subcategory = false
-//	}
-//	resp, err := r.svc.GetCouponsByCategory(fmt.Sprint(id.(string)), cat)
-//	if err != nil {
-//		return err
-//	}
-//	return c.JSON(http.StatusOK, resp)
-//}
-//
-//func (r *subscriptionCouponsRouteManager) getCouponsStandardByCategory(c echo.Context) error {
-//	category := c.Param("category")
-//	subcategory := c.Request().Header["Subcategory"][0]
-//	var cat entity.Category
-//	cat.Name = category
-//	if subcategory == "true" {
-//		cat.Subcategory = true
-//	} else {
-//		cat.Subcategory = false
-//	}
-//	resp, err := r.svc.GetCouponsStandardByCategory(cat)
-//	if err != nil {
-//		return err
-//	}
-//	return c.JSON(http.StatusOK, resp)
-//}
-//
-//func (r *subscriptionCouponsRouteManager) getCouponsPagination(c echo.Context) error {
-//	info := entity.PaginationInfo{}
-//	if err := c.Bind(&info); err != nil {
-//		return err
-//	}
-//	resp, err := r.svc.GetCouponsPagination(info)
-//	if err != nil {
-//		return err
-//	}
-//	return c.JSON(http.StatusOK, resp)
-//}
-
 func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) error {
 	region := c.QueryParam("region")
 	category := c.QueryParam("category")
@@ -287,14 +241,14 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 	return c.JSON(http.StatusOK, respSlice)
 }
 
-//func (r *subscriptionCouponsRouteManager) getCouponsStandardByRegion(c echo.Context) error {
-//	region := c.Param("region")
-//	resp, err := r.svc.GetCouponsStandardByRegion(region)
-//	if err != nil {
-//		return err
-//	}
-//	return c.JSON(http.StatusOK, resp)
-//}
+func (r *subscriptionCouponsRouteManager) getCategories(c echo.Context) error {
+	categories, err := r.svc.GetCategories()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprint(err))
+	}
+
+	return c.JSON(http.StatusOK, categories)
+}
 
 func (r *subscriptionCouponsRouteManager) getOrganizationInfo(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)

@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AdminServiceClient interface {
 	GetSubsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCouponsResponse, error)
+	GetCategoriesGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCategoryResponse, error)
+	GetRegionsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RegionResponse, error)
 	GetCouponsByRegionGRPC(ctx context.Context, in *Region, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetCouponsByCategoryGRPC(ctx context.Context, in *Category, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetOrganizationInfo(ctx context.Context, in *InfoOrganizationRequest, opts ...grpc.CallOption) (*InfoOrganizationResponse, error)
@@ -51,6 +53,24 @@ func (c *adminServiceClient) GetSubsGRPC(ctx context.Context, in *Empty, opts ..
 func (c *adminServiceClient) GetCouponsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCouponsResponse, error) {
 	out := new(GetCouponsResponse)
 	err := c.cc.Invoke(ctx, "/api.AdminService/GetCouponsGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetCategoriesGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCategoryResponse, error) {
+	out := new(GetCategoryResponse)
+	err := c.cc.Invoke(ctx, "/api.AdminService/GetCategoriesGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetRegionsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RegionResponse, error) {
+	out := new(RegionResponse)
+	err := c.cc.Invoke(ctx, "/api.AdminService/GetRegionsGRPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +128,8 @@ func (c *adminServiceClient) UpdateMembersInfo(ctx context.Context, in *UpdateMe
 type AdminServiceServer interface {
 	GetSubsGRPC(context.Context, *Empty) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(context.Context, *Empty) (*GetCouponsResponse, error)
+	GetCategoriesGRPC(context.Context, *Empty) (*GetCategoryResponse, error)
+	GetRegionsGRPC(context.Context, *Empty) (*RegionResponse, error)
 	GetCouponsByRegionGRPC(context.Context, *Region) (*GetCouponsResponse, error)
 	GetCouponsByCategoryGRPC(context.Context, *Category) (*GetCouponsResponse, error)
 	GetOrganizationInfo(context.Context, *InfoOrganizationRequest) (*InfoOrganizationResponse, error)
@@ -125,6 +147,12 @@ func (UnimplementedAdminServiceServer) GetSubsGRPC(context.Context, *Empty) (*Su
 }
 func (UnimplementedAdminServiceServer) GetCouponsGRPC(context.Context, *Empty) (*GetCouponsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCouponsGRPC not implemented")
+}
+func (UnimplementedAdminServiceServer) GetCategoriesGRPC(context.Context, *Empty) (*GetCategoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoriesGRPC not implemented")
+}
+func (UnimplementedAdminServiceServer) GetRegionsGRPC(context.Context, *Empty) (*RegionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegionsGRPC not implemented")
 }
 func (UnimplementedAdminServiceServer) GetCouponsByRegionGRPC(context.Context, *Region) (*GetCouponsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCouponsByRegionGRPC not implemented")
@@ -186,6 +214,42 @@ func _AdminService_GetCouponsGRPC_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).GetCouponsGRPC(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetCategoriesGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetCategoriesGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdminService/GetCategoriesGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetCategoriesGRPC(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetRegionsGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetRegionsGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdminService/GetRegionsGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetRegionsGRPC(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -294,6 +358,14 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCouponsGRPC",
 			Handler:    _AdminService_GetCouponsGRPC_Handler,
+		},
+		{
+			MethodName: "GetCategoriesGRPC",
+			Handler:    _AdminService_GetCategoriesGRPC_Handler,
+		},
+		{
+			MethodName: "GetRegionsGRPC",
+			Handler:    _AdminService_GetRegionsGRPC_Handler,
 		},
 		{
 			MethodName: "GetCouponsByRegionGRPC",

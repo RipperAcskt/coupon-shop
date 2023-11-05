@@ -364,6 +364,50 @@ func (p SubscriptionCoupon) GetCouponsStandard() ([]entity.CouponEntity, error) 
 	return resultCoupons, nil
 }
 
+func (p SubscriptionCoupon) GetRegions() ([]entity.Region, error) {
+	ctx := context.Background()
+	regions, err := p.client.GetRegionsGRPC(ctx, &adminpb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
+	}
+
+	resultRegions := make([]entity.Region, len(regions.Regions))
+	for i, v := range regions.Regions {
+		resultRegions[i] = entity.Region{
+			Name: v.Region,
+		}
+	}
+
+	return resultRegions, nil
+}
+
+func (p SubscriptionCoupon) GetCategories() ([]entity.CategorySubcategory, error) {
+	ctx := context.Background()
+	categories, err := p.client.GetCategoriesGRPC(ctx, &adminpb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("GetCategoriesGRPC failed: %w", err)
+	}
+
+	resultCategories := make([]entity.CategorySubcategory, len(categories.Categories))
+	for i, v := range categories.Categories {
+		var subCat []entity.Subcategory
+		for _, sub := range v.Subcategories {
+			subCatEntity := entity.Subcategory{
+				ID:   sub.ID,
+				Name: sub.Name,
+			}
+			subCat = append(subCat, subCatEntity)
+		}
+		resultCategories[i] = entity.CategorySubcategory{
+			ID:            v.ID,
+			Name:          v.Name,
+			Subcategories: subCat,
+		}
+	}
+
+	return resultCategories, nil
+}
+
 func (p SubscriptionCoupon) GetCouponsStandardByRegion(region string) ([]entity.CouponEntity, error) {
 	ctx := context.Background()
 	coupons, err := p.client.GetCouponsByRegionGRPC(ctx, &adminpb.Region{Region: region})
