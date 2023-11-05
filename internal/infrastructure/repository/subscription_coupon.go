@@ -94,7 +94,7 @@ func (r *subscriptionCouponRepo) GetCouponsPagination(pagination entity.Paginati
 			return nil, fmt.Errorf("get media failed: %w", err)
 		}
 
-		coupon.Media = &media
+		coupon.Media = media
 
 		coupons = append(coupons, coupon)
 	}

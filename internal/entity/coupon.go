@@ -24,7 +24,7 @@ type CouponEntity struct {
 	Level       int32   `json:"level"`
 	Percent     int32   `json:"percent"`
 	ContentUrl  string  `json:"content_url"`
-	Media       *Media  `json:"media"`
+	Media       Media   `json:"media"`
 	Region      string  `json:"region"`
 	Category    string  `json:"category"`
 	Subcategory string  `json:"subcategory"`

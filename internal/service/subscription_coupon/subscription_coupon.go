@@ -136,7 +136,7 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
@@ -216,7 +216,7 @@ func (p SubscriptionCoupon) GetCouponsByRegion(userId, region string) ([]entity.
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
@@ -296,7 +296,7 @@ func (p SubscriptionCoupon) GetCouponsByCategory(userId string, category entity.
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
@@ -351,11 +351,13 @@ func (p SubscriptionCoupon) GetCouponsStandard() ([]entity.CouponEntity, error) 
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
-			Region: v.Region,
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
 		}
 	}
 
@@ -379,11 +381,13 @@ func (p SubscriptionCoupon) GetCouponsStandardByRegion(region string) ([]entity.
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},
-			Region: v.Region,
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
 		}
 	}
 
@@ -407,7 +411,7 @@ func (p SubscriptionCoupon) GetCouponsStandardByCategory(category entity.Categor
 			Level:       v.Level,
 			Percent:     v.Percent,
 			ContentUrl:  v.ContentUrl,
-			Media: &entity.Media{
+			Media: entity.Media{
 				ID:   v.Media.ID,
 				Path: v.Media.Path,
 			},

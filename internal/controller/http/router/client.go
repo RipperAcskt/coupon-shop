@@ -7,6 +7,7 @@ import (
 	"shop-smart-api/internal/controller/http/middleware"
 	"shop-smart-api/internal/entity"
 	"shop-smart-api/pkg"
+	"strconv"
 )
 
 type subscriptionCouponsRouteManager struct {
@@ -44,12 +45,12 @@ func CreateSubscriptionCouponService(g *echo.Group, svc SubscriptionCouponServic
 func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/subscriptions", r.getSubscriptions, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons", r.getCoupons, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/coupons/filter/region/:region", r.getCouponsByRegion, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/coupons/filter/category/:category", r.getCouponsByCategory, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("POST", "/coupons/pagination", r.getCouponsPagination, middleware.AuthMiddleware(r.serverConfig.Secret))
+	//r.group.Add("GET", "/coupons/filter/region/:region", r.getCouponsByRegion, middleware.AuthMiddleware(r.serverConfig.Secret))
+	//r.group.Add("GET", "/coupons/filter/category/:category", r.getCouponsByCategory, middleware.AuthMiddleware(r.serverConfig.Secret))
+	//r.group.Add("POST", "/coupons/pagination", r.getCouponsPagination, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/coupons/standard", r.getCouponsStandard)
-	r.group.Add("GET", "/coupons/standard/filter/region/:region", r.getCouponsStandardByRegion)
-	r.group.Add("GET", "/coupons/standard/filter/category/:category", r.getCouponsStandardByCategory)
+	//r.group.Add("GET", "/coupons/standard/filter/region/:region", r.getCouponsStandardByRegion)
+	//r.group.Add("GET", "/coupons/standard/filter/category/:category", r.getCouponsStandardByCategory)
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
@@ -66,86 +67,234 @@ func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error
 
 func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
-	resp, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, resp)
-}
-
-func (r *subscriptionCouponsRouteManager) getCouponsByRegion(c echo.Context) error {
-	id := c.Get(middleware.CurrentUserKey)
-	region := c.Param("region")
-	resp, err := r.svc.GetCouponsByRegion(fmt.Sprint(id.(string)), region)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, resp)
-}
-
-func (r *subscriptionCouponsRouteManager) getCouponsByCategory(c echo.Context) error {
-	id := c.Get(middleware.CurrentUserKey)
-	category := c.Param("category")
+	region := c.QueryParam("region")
+	category := c.QueryParam("category")
 	subcategory := c.Request().Header["Subcategory"][0]
-	var cat entity.Category
-	cat.Name = category
-	if subcategory == "true" {
-		cat.Subcategory = true
-	} else {
-		cat.Subcategory = false
+	limit := c.QueryParam("limit")
+	offset := c.QueryParam("offset")
+
+	var regionSlice, categorySlice, respSlice, couponsSlice, regionCategorySlice []entity.CouponEntity
+	var err error
+
+	if region != "" {
+		regionSlice, err = r.svc.GetCouponsByRegion(fmt.Sprint(id.(string)), region)
+		if err != nil {
+			return err
+		}
 	}
-	resp, err := r.svc.GetCouponsByCategory(fmt.Sprint(id.(string)), cat)
+	if category != "" {
+		var cat entity.Category
+		cat.Name = category
+		if subcategory == "true" {
+			cat.Subcategory = true
+		} else {
+			cat.Subcategory = false
+		}
+		categorySlice, err = r.svc.GetCouponsByCategory(fmt.Sprint(id.(string)), cat)
+		if err != nil {
+			return err
+		}
+	}
+	coupons, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, resp)
+	respSlice = coupons
+
+	if len(categorySlice) != 0 && len(regionSlice) != 0 {
+		regionCategorySlice = intersect(categorySlice, regionSlice)
+	} else if len(categorySlice) != 0 && len(regionSlice) == 0 {
+		regionCategorySlice = categorySlice
+	} else if len(categorySlice) == 0 && len(regionSlice) != 0 {
+		regionCategorySlice = regionSlice
+	} else {
+		regionCategorySlice = coupons
+	}
+
+	if len(regionCategorySlice) != 0 {
+		couponsSlice = intersect(regionCategorySlice, coupons)
+	} else {
+		couponsSlice = coupons
+	}
+
+	var limitNum int64
+	if limit != "" {
+		limitNum, err = strconv.ParseInt(limit, 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		if int(limitNum) >= len(couponsSlice) {
+			respSlice = couponsSlice[:len(couponsSlice)-1]
+		} else if limitNum < 0 {
+			respSlice = couponsSlice
+		} else {
+			respSlice = couponsSlice[:limitNum]
+		}
+	}
+	if offset != "" {
+		offsetNum, err := strconv.ParseInt(offset, 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		if int(offsetNum) >= len(couponsSlice) || int(offsetNum+limitNum) > len(couponsSlice) {
+			respSlice = couponsSlice[:len(couponsSlice)]
+		} else if offsetNum < 0 {
+			respSlice = couponsSlice
+		} else {
+			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
+		}
+	}
+
+	return c.JSON(http.StatusOK, respSlice)
 }
 
-func (r *subscriptionCouponsRouteManager) getCouponsStandardByCategory(c echo.Context) error {
-	category := c.Param("category")
-	subcategory := c.Request().Header["Subcategory"][0]
-	var cat entity.Category
-	cat.Name = category
-	if subcategory == "true" {
-		cat.Subcategory = true
-	} else {
-		cat.Subcategory = false
-	}
-	resp, err := r.svc.GetCouponsStandardByCategory(cat)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, resp)
-}
-
-func (r *subscriptionCouponsRouteManager) getCouponsPagination(c echo.Context) error {
-	info := entity.PaginationInfo{}
-	if err := c.Bind(&info); err != nil {
-		return err
-	}
-	resp, err := r.svc.GetCouponsPagination(info)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, resp)
-}
+//func (r *subscriptionCouponsRouteManager) getCouponsByRegion(c echo.Context) error {
+//	id := c.Get(middleware.CurrentUserKey)
+//	region := c.Param("region")
+//	resp, err := r.svc.GetCouponsByRegion(fmt.Sprint(id.(string)), region)
+//	if err != nil {
+//		return err
+//	}
+//	return c.JSON(http.StatusOK, resp)
+//}
+//
+//func (r *subscriptionCouponsRouteManager) getCouponsByCategory(c echo.Context) error {
+//	id := c.Get(middleware.CurrentUserKey)
+//	category := c.Param("category")
+//	subcategory := c.Request().Header["Subcategory"][0]
+//	var cat entity.Category
+//	cat.Name = category
+//	if subcategory == "true" {
+//		cat.Subcategory = true
+//	} else {
+//		cat.Subcategory = false
+//	}
+//	resp, err := r.svc.GetCouponsByCategory(fmt.Sprint(id.(string)), cat)
+//	if err != nil {
+//		return err
+//	}
+//	return c.JSON(http.StatusOK, resp)
+//}
+//
+//func (r *subscriptionCouponsRouteManager) getCouponsStandardByCategory(c echo.Context) error {
+//	category := c.Param("category")
+//	subcategory := c.Request().Header["Subcategory"][0]
+//	var cat entity.Category
+//	cat.Name = category
+//	if subcategory == "true" {
+//		cat.Subcategory = true
+//	} else {
+//		cat.Subcategory = false
+//	}
+//	resp, err := r.svc.GetCouponsStandardByCategory(cat)
+//	if err != nil {
+//		return err
+//	}
+//	return c.JSON(http.StatusOK, resp)
+//}
+//
+//func (r *subscriptionCouponsRouteManager) getCouponsPagination(c echo.Context) error {
+//	info := entity.PaginationInfo{}
+//	if err := c.Bind(&info); err != nil {
+//		return err
+//	}
+//	resp, err := r.svc.GetCouponsPagination(info)
+//	if err != nil {
+//		return err
+//	}
+//	return c.JSON(http.StatusOK, resp)
+//}
 
 func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) error {
-	resp, err := r.svc.GetCouponsStandard()
+	region := c.QueryParam("region")
+	category := c.QueryParam("category")
+	subcategory := c.Request().Header["Subcategory"][0]
+	limit := c.QueryParam("limit")
+	offset := c.QueryParam("offset")
+
+	var regionSlice, categorySlice, respSlice, couponsSlice, regionCategorySlice []entity.CouponEntity
+	var err error
+
+	if region != "" {
+		regionSlice, err = r.svc.GetCouponsStandardByRegion(region)
+		if err != nil {
+			return err
+		}
+	}
+	if category != "" {
+		var cat entity.Category
+		cat.Name = category
+		if subcategory == "true" {
+			cat.Subcategory = true
+		} else {
+			cat.Subcategory = false
+		}
+		categorySlice, err = r.svc.GetCouponsStandardByCategory(cat)
+		if err != nil {
+			return err
+		}
+	}
+	coupons, err := r.svc.GetCouponsStandard()
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, resp)
+	respSlice = coupons
+
+	if len(categorySlice) != 0 && len(regionSlice) != 0 {
+		regionCategorySlice = intersect(categorySlice, regionSlice)
+	} else if len(categorySlice) != 0 && len(regionSlice) == 0 {
+		regionCategorySlice = categorySlice
+	} else if len(categorySlice) == 0 && len(regionSlice) != 0 {
+		regionCategorySlice = regionSlice
+	} else {
+		regionCategorySlice = coupons
+	}
+
+	if len(regionCategorySlice) != 0 {
+		couponsSlice = intersect(regionCategorySlice, coupons)
+	} else {
+		couponsSlice = coupons
+	}
+
+	var limitNum int64
+	if limit != "" {
+		limitNum, err = strconv.ParseInt(limit, 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		if int(limitNum) >= len(couponsSlice) {
+			respSlice = couponsSlice[:len(couponsSlice)-1]
+		} else if limitNum < 0 {
+			respSlice = couponsSlice
+		} else {
+			respSlice = couponsSlice[:limitNum]
+		}
+	}
+	if offset != "" {
+		offsetNum, err := strconv.ParseInt(offset, 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		if int(offsetNum) >= len(couponsSlice) || int(offsetNum+limitNum) > len(couponsSlice) {
+			respSlice = couponsSlice[:len(couponsSlice)]
+		} else if offsetNum < 0 {
+			respSlice = couponsSlice
+		} else {
+			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
+		}
+	}
+
+	return c.JSON(http.StatusOK, respSlice)
 }
 
-func (r *subscriptionCouponsRouteManager) getCouponsStandardByRegion(c echo.Context) error {
-	region := c.Param("region")
-	resp, err := r.svc.GetCouponsStandardByRegion(region)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, resp)
-}
+//func (r *subscriptionCouponsRouteManager) getCouponsStandardByRegion(c echo.Context) error {
+//	region := c.Param("region")
+//	resp, err := r.svc.GetCouponsStandardByRegion(region)
+//	if err != nil {
+//		return err
+//	}
+//	return c.JSON(http.StatusOK, resp)
+//}
 
 func (r *subscriptionCouponsRouteManager) getOrganizationInfo(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
@@ -198,4 +347,16 @@ func (r *subscriptionCouponsRouteManager) updateMembersInfo(c echo.Context) erro
 	}
 	resp.Message = message
 	return c.JSON(http.StatusOK, resp)
+}
+
+func intersect(slice1 []entity.CouponEntity, slice2 []entity.CouponEntity) []entity.CouponEntity {
+	var slice []entity.CouponEntity
+	for i1 := 0; i1 < len(slice1); i1++ {
+		for i2 := 0; i2 < len(slice2); i2++ {
+			if slice1[i1] == slice2[i2] {
+				slice = append(slice, slice1[i1])
+			}
+		}
+	}
+	return slice
 }
