@@ -121,12 +121,14 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	} else {
 		regionCategorySlice = coupons
 	}
+	respSlice = regionCategorySlice
 
 	if len(regionCategorySlice) != 0 {
 		couponsSlice = intersect(regionCategorySlice, coupons)
 	} else {
 		couponsSlice = coupons
 	}
+	respSlice = couponsSlice
 
 	var limitNum int64
 	if limit != "" {
@@ -203,12 +205,14 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 	} else {
 		regionCategorySlice = coupons
 	}
+	respSlice = regionCategorySlice
 
 	if len(regionCategorySlice) != 0 {
 		couponsSlice = intersect(regionCategorySlice, coupons)
 	} else {
 		couponsSlice = coupons
 	}
+	respSlice = couponsSlice
 
 	var limitNum int64
 	if limit != "" {
