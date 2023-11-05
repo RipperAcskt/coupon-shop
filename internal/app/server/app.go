@@ -44,7 +44,7 @@ func (a *application) Run() error {
 	paymentSvc := payment.New(transactionRepository, a.appCfg, smsClient, mailer, userRepository, couponCodesRepo)
 	subscriptionCouponRepository := repository.CreateSubscriptionCouponRepo(a.database)
 
-	conn, err := grpc.Dial("localhost:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("coupon-shop-admin:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
