@@ -243,8 +243,10 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 			respSlice = couponsSlice[:len(couponsSlice)]
 		} else if offsetNum < 0 {
 			respSlice = couponsSlice
-		} else if limitNum == 0 || int(offsetNum+limitNum) > len(couponsSlice) {
+		} else if limitNum == 0 {
 			respSlice = couponsSlice[offsetNum:]
+		} else if int(offsetNum+limitNum) > len(couponsSlice) {
+			respSlice = []entity.CouponEntity{}
 		} else {
 			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
 		}
