@@ -220,8 +220,8 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(limitNum) >= len(couponsSlice) {
-			respSlice = couponsSlice[:len(couponsSlice)-1]
+		if int(limitNum) > len(couponsSlice) {
+			respSlice = couponsSlice[:len(couponsSlice)]
 		} else if limitNum < 0 {
 			respSlice = couponsSlice
 		} else {
@@ -233,10 +233,12 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(offsetNum) >= len(couponsSlice) || int(offsetNum+limitNum) > len(couponsSlice) {
+		if int(offsetNum) >= len(couponsSlice) {
 			respSlice = couponsSlice[:len(couponsSlice)]
 		} else if offsetNum < 0 {
 			respSlice = couponsSlice
+		} else if limitNum == 0 || int(offsetNum+limitNum) > len(couponsSlice) {
+			respSlice = couponsSlice[offsetNum:]
 		} else {
 			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
 		}
