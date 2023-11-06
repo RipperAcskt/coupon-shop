@@ -239,8 +239,8 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(offsetNum) >= len(couponsSlice) {
-			respSlice = couponsSlice[:len(couponsSlice)]
+		if int(offsetNum) > len(couponsSlice) {
+			respSlice = []entity.CouponEntity{}
 		} else if offsetNum < 0 {
 			respSlice = couponsSlice
 		} else if limitNum == 0 {
