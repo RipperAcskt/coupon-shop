@@ -176,6 +176,9 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return err
 		}
+		if len(regionSlice) == 0 {
+			return c.JSON(http.StatusOK, regionSlice)
+		}
 	}
 	if category != "" {
 		var cat entity.Category
@@ -188,6 +191,9 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		categorySlice, err = r.svc.GetCouponsStandardByCategory(cat)
 		if err != nil {
 			return err
+		}
+		if len(categorySlice) == 0 {
+			return c.JSON(http.StatusOK, categorySlice)
 		}
 	}
 	coupons, err := r.svc.GetCouponsStandard()
