@@ -201,6 +201,8 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		return err
 	}
 	respSlice = coupons
+	fmt.Println("cat", categorySlice)
+	fmt.Println("region", regionSlice)
 
 	if len(categorySlice) != 0 && len(regionSlice) != 0 {
 		regionCategorySlice = intersect(categorySlice, regionSlice)
@@ -212,6 +214,7 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		regionCategorySlice = coupons
 	}
 	respSlice = regionCategorySlice
+	fmt.Println("regionCat", regionCategorySlice)
 
 	if len(regionCategorySlice) != 0 {
 		couponsSlice = intersect(regionCategorySlice, coupons)
@@ -251,6 +254,7 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
 		}
 	}
+	fmt.Println("resp", respSlice)
 
 	return c.JSON(http.StatusOK, respSlice)
 }
