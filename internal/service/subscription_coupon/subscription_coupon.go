@@ -16,7 +16,7 @@ type SubscriptionCouponInterface interface {
 	GetUserSubscriptionLevel(userId string) (int, error)
 	GetEmailUser(userID string) (string, error)
 	GetOrgId(email string) (string, error)
-	GetOrgSubscriptionLevel(orgID string) (int, error)
+	GetOrgSubscriptionLevel(email string) (int, error)
 	GetRole(orgId, email string) (string, error)
 	GetCouponsPagination(pagination entity.PaginationInfo) ([]entity.CouponEntity, error)
 	Get(id string) (*entity.User, error)
@@ -134,14 +134,7 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 		return nil, fmt.Errorf("GetEmailUser failed: %w", err)
 	}
 
-	orgID, err := p.repository.GetOrgId(email)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("GetOrgId failed: %w", err)
-		}
-	}
-
-	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
+	orgLevel, err := p.repository.GetOrgSubscriptionLevel(email)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetOrgSubscriptionLevel failed: %w", err)
@@ -232,14 +225,7 @@ func (p SubscriptionCoupon) GetCouponsByRegion(userId, region string) ([]entity.
 		return nil, fmt.Errorf("GetEmailUser failed: %w", err)
 	}
 
-	orgID, err := p.repository.GetOrgId(email)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("GetOrgId failed: %w", err)
-		}
-	}
-
-	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
+	orgLevel, err := p.repository.GetOrgSubscriptionLevel(email)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetOrgSubscriptionLevel failed: %w", err)
@@ -312,14 +298,7 @@ func (p SubscriptionCoupon) GetCouponsByCategory(userId string, category entity.
 		return nil, fmt.Errorf("GetEmailUser failed: %w", err)
 	}
 
-	orgID, err := p.repository.GetOrgId(email)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("GetOrgId failed: %w", err)
-		}
-	}
-
-	orgLevel, err := p.repository.GetOrgSubscriptionLevel(orgID)
+	orgLevel, err := p.repository.GetOrgSubscriptionLevel(email)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("GetOrgSubscriptionLevel failed: %w", err)
