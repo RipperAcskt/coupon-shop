@@ -122,14 +122,32 @@ message Category {
   bool subcategory = 2;
 }
 
+message Link {
+  string id = 1;
+  string name = 2;
+  string link = 3;
+  string region = 4;
+}
+
+message Links {
+  repeated Link links = 1;
+}
+
+message Search {
+  string s = 1;
+}
+
 service AdminService  {
   rpc GetSubsGRPC(Empty) returns (SubscriptionsResponse){};
   rpc GetCouponsGRPC(Empty) returns (GetCouponsResponse){};
+  rpc GetCouponsSearchGRPC(Search) returns (GetCouponsResponse){};
   rpc GetCategoriesGRPC(Empty) returns (GetCategoryResponse){};
   rpc GetRegionsGRPC(Empty) returns (RegionResponse){};
+  rpc GetLinksGRPC(Empty) returns (Links){};
   rpc GetCouponsByRegionGRPC(Region) returns (GetCouponsResponse){};
   rpc GetCouponsByCategoryGRPC(Category) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};
   rpc UpdateOrganizationInfo(UpdateOrganizationRequest) returns (UpdateOrganizationResponse){};
   rpc UpdateMembersInfo(UpdateMembersRequest) returns (UpdateMembersResponse){};
+  rpc UpdateCoupon(Coupon) returns (UpdateMembersResponse){};
 }

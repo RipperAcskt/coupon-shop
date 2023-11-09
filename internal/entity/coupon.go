@@ -28,6 +28,7 @@ type CouponEntity struct {
 	Region      string  `json:"region"`
 	Category    string  `json:"category"`
 	Subcategory string  `json:"subcategory"`
+	OrgId       string  `json:"organization_id"`
 }
 
 type PaginationInfo struct {

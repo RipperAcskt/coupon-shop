@@ -73,7 +73,6 @@ func (r *queryResolver) GetOrganizationUsers(ctx context.Context) ([]*model.User
 
 // GetTransactions is the resolver for the getTransactions field.
 func (r *queryResolver) GetTransactions(ctx context.Context) ([]*model.Transaction, error) {
-
 	return nil, nil
 }
 

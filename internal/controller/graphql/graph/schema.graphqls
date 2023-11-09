@@ -12,6 +12,8 @@ type User {
   organizationId: ID
   createdAt: String!
   updatedAt: String!
+  subscription: String!
+  subscriptionTime: String!
 }
 
 type Organization {

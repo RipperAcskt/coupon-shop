@@ -17,8 +17,9 @@ type SubscriptionCouponInterface interface {
 	GetEmailUser(userID string) (string, error)
 	GetOrgId(email string) (string, error)
 	GetOrgSubscriptionLevel(orgID string) (int, error)
-	GetRole(email string) (string, error)
+	GetRole(orgId, email string) (string, error)
 	GetCouponsPagination(pagination entity.PaginationInfo) ([]entity.CouponEntity, error)
+	Get(id string) (*entity.User, error)
 }
 
 type SubscriptionCoupon struct {
@@ -33,6 +34,28 @@ func New(r SubscriptionCouponInterface, cfg *pkg.AppConfig, client adminpb.Admin
 		repository: r,
 		cfg:        cfg,
 	}
+}
+
+func (p SubscriptionCoupon) Get(id string) (*entity.User, error) {
+	return p.repository.Get(id)
+}
+func (p SubscriptionCoupon) GetLinks() ([]entity.Link, error) {
+	ctx := context.Background()
+	links, err := p.client.GetLinksGRPC(ctx, &adminpb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
+	resultLinks := make([]entity.Link, len(links.Links))
+	for i, v := range links.Links {
+		resultLinks[i] = entity.Link{
+			Id:     v.Id,
+			Name:   v.Name,
+			Link:   v.Link,
+			Region: v.Region,
+		}
+	}
+	return resultLinks, nil
 }
 
 func (p SubscriptionCoupon) GetSubscriptions(userId string) ([]entity.SubscriptionEntity, error) {
@@ -172,6 +195,24 @@ func (p SubscriptionCoupon) GetCoupons(userId string) ([]entity.CouponEntity, er
 	}
 
 	return resultCoupons, nil
+}
+
+func (p SubscriptionCoupon) UpdateCoupon(coupon entity.CouponEntity) (string, error) {
+	ctx := context.Background()
+	coupons, err := p.client.UpdateCoupon(ctx, &adminpb.Coupon{
+		Name:        coupon.Name,
+		Description: coupon.Description,
+		Price:       int32(coupon.Price),
+		Percent:     int32(coupon.Percent),
+		Region:      coupon.Region,
+		Category:    coupon.Category,
+		Subcategory: coupon.Subcategory,
+	})
+	if err != nil {
+		return "", fmt.Errorf("UpdateCoupon failed: %w", err)
+	}
+
+	return coupons.Message, nil
 }
 
 func (p SubscriptionCoupon) GetCouponsByRegion(userId, region string) ([]entity.CouponEntity, error) {
@@ -337,6 +378,36 @@ func (p SubscriptionCoupon) GetCouponsByCategory(userId string, category entity.
 func (p SubscriptionCoupon) GetCouponsStandard() ([]entity.CouponEntity, error) {
 	ctx := context.Background()
 	coupons, err := p.client.GetCouponsGRPC(ctx, &adminpb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
+	}
+
+	resultCoupons := make([]entity.CouponEntity, len(coupons.Coupons))
+	for i, v := range coupons.Coupons {
+		resultCoupons[i] = entity.CouponEntity{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       float32(v.Price),
+			Level:       v.Level,
+			Percent:     v.Percent,
+			ContentUrl:  v.ContentUrl,
+			Media: entity.Media{
+				ID:   v.Media.ID,
+				Path: v.Media.Path,
+			},
+			Region:      v.Region,
+			Category:    v.Category,
+			Subcategory: v.Subcategory,
+		}
+	}
+
+	return resultCoupons, nil
+}
+
+func (p SubscriptionCoupon) GetCouponsSearchGRPC(s string) ([]entity.CouponEntity, error) {
+	ctx := context.Background()
+	coupons, err := p.client.GetCouponsSearchGRPC(ctx, &adminpb.Search{S: s})
 	if err != nil {
 		return nil, fmt.Errorf("GetCouponsGRPC failed: %w", err)
 	}
@@ -579,8 +650,8 @@ func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role stri
 	return Response, nil
 }
 
-func (p SubscriptionCoupon) GetRole(email string) (string, error) {
-	role, err := p.repository.GetRole(email)
+func (p SubscriptionCoupon) GetRole(orgId, email string) (string, error) {
+	role, err := p.repository.GetRole(orgId, email)
 	if err != nil {
 		return "", err
 	}

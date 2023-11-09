@@ -31,13 +31,18 @@ func (t *userTransformer) TransformManyToModel(u []*entity.User) []*model.User {
 func (t *userTransformer) TransformToModel(u *entity.User) *model.User {
 	organizationId := t.resolveOrganization(u.OrganizationID)
 
-	return &model.User{
-		ID:             u.ID,
-		Email:          &u.Email,
-		Phone:          u.Phone,
-		Roles:          t.parseRoles(u.Roles),
-		OrganizationID: organizationId,
+	user := &model.User{
+		ID:               u.ID,
+		Email:            &u.Email,
+		Phone:            u.Phone,
+		Roles:            t.parseRoles(u.Roles),
+		OrganizationID:   organizationId,
+		SubscriptionTime: u.SubscriptionTime.String(),
 	}
+	if u.Subscription != nil {
+		user.Subscription = *u.Subscription
+	}
+	return user
 }
 
 func (t *userTransformer) parseRoles(userRoles []entity.Role) []string {

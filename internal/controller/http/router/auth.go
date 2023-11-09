@@ -1,8 +1,6 @@
 package router
 
 import (
-	"database/sql"
-	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"shop-smart-api/internal/controller/http/types"
@@ -42,16 +40,8 @@ func (r *authRouteManager) sendCode(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	//TODO : here i can get role only if user is signed with email
-	role := ""
-	if channel.IsEmail() {
-		role, err = r.scs.GetRole(authRequest.Resource)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return err
-		}
-	}
 
-	user, token, err := r.userUseCase.ProvideOrCreate(authRequest.Resource, channel, role)
+	user, token, err := r.userUseCase.ProvideOrCreate(authRequest.Resource, channel, "")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

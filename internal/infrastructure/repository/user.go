@@ -43,13 +43,13 @@ func (r *userRepository) Store(
 	roles []entity.Role,
 ) (*entity.User, error) {
 	id := uuid.NewString()
-	return r.executeQueryRow(`INSERT INTO users (id, email, phone, code) VALUES ($1, $2, $3, $4) RETURNING id, email, phone, code, created_at, updated_at, subscription`, id, email, phone, code)
+	return r.executeQueryRow(`INSERT INTO users (id, email, phone, code) VALUES ($1, $2, $3, $4) RETURNING id, email, phone, code, created_at, updated_at, subscription, subscription_time`, id, email, phone, code)
 }
 
 func (r *userRepository) UpdateUser(id string, email string) (*entity.User, error) {
 	return r.executeQueryRow(`
 		UPDATE users SET email = $1 WHERE id = $2
-		RETURNING id, email, phone, code, created_at, updated_at, subscription
+		RETURNING id, email, phone, code, created_at, updated_at, subscription, subscription_time
 	`, email, id)
 }
 
@@ -57,13 +57,13 @@ func (r *userRepository) AddOrganization(id string, organization int64, role *en
 	if role == nil {
 		return r.executeQueryRow(`
 			UPDATE users SET organization_id = $1 WHERE id = $2
-			RETURNING id, email, phone, code, created_at, updated_at, organization_id, roles
+			RETURNING id, email, phone, code, created_at, updated_at, organization_id, roles, subscription_time
 		`, organization, id)
 	}
 
 	return r.executeQueryRow(`
 		UPDATE users SET organization_id = $1, roles = array_append(roles, $2) WHERE id = $3
-		RETURNING id, email, phone, code, created_at, updated_at, organization_id, roles
+		RETURNING id, email, phone, code, created_at, updated_at, organization_id, roles, subscription_time
 		`, organization, role, id)
 }
 
@@ -108,6 +108,7 @@ func (r *userRepository) executeQueryRow(query string, args ...any) (*entity.Use
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.Subscription,
+		&user.SubscriptionTime,
 	)
 	if err != nil {
 		return nil, err

@@ -27,10 +27,14 @@ type SubscriptionCouponService interface {
 	GetCouponsStandardByCategory(category entity.Category) ([]entity.CouponEntity, error)
 	UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, id string) (string, error)
 	UpdateMembersInfo(members []entity.Member, role string, id string) (string, error)
-	GetRole(email string) (string, error)
+	GetRole(orgId, email string) (string, error)
 	GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error)
 	GetCategories() ([]entity.CategorySubcategory, error)
 	GetRegions() ([]entity.Region, error)
+	GetLinks() ([]entity.Link, error)
+	Get(id string) (*entity.User, error)
+	UpdateCoupon(coupon entity.CouponEntity) (string, error)
+	GetCouponsSearchGRPC(s string) ([]entity.CouponEntity, error)
 }
 type UpdateResponse struct {
 	Message string `json:"message"`
@@ -56,12 +60,23 @@ func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("GET", "/links", r.getLinks)
+	r.group.Add("PUT", "/coupons", r.updateCoupon)
+	r.group.Add("GET", "/coupons/:s", r.getCouponsSearch)
 
 }
 
 func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error {
 	id := c.Get(middleware.CurrentUserKey)
 	resp, err := r.svc.GetSubscriptions(fmt.Sprint(id.(string)))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) getLinks(c echo.Context) error {
+	resp, err := r.svc.GetLinks()
 	if err != nil {
 		return err
 	}
@@ -84,13 +99,16 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	limit := c.QueryParam("limit")
 	offset := c.QueryParam("offset")
 
-	var regionSlice, categorySlice, respSlice, couponsSlice, regionCategorySlice []entity.CouponEntity
+	var regionSlice, categorySlice, respSlice, regionCategorySlice []entity.CouponEntity
 	var err error
 
 	if region != "" {
-		regionSlice, err = r.svc.GetCouponsByRegion(fmt.Sprint(id.(string)), region)
+		regionSlice, err = r.svc.GetCouponsByRegion(id.(string), region)
 		if err != nil {
 			return err
+		}
+		if len(regionSlice) == 0 {
+			return c.JSON(http.StatusOK, regionSlice)
 		}
 	}
 	if category != "" {
@@ -101,34 +119,21 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 		} else {
 			cat.Subcategory = false
 		}
-		categorySlice, err = r.svc.GetCouponsByCategory(fmt.Sprint(id.(string)), cat)
+		categorySlice, err = r.svc.GetCouponsByCategory(id.(string), cat)
 		if err != nil {
 			return err
 		}
+		if len(categorySlice) == 0 {
+			return c.JSON(http.StatusOK, categorySlice)
+		}
 	}
-	coupons, err := r.svc.GetCoupons(fmt.Sprint(id.(string)))
-	if err != nil {
-		return err
-	}
-	respSlice = coupons
 
-	if len(categorySlice) != 0 && len(regionSlice) != 0 {
-		regionCategorySlice = intersect(categorySlice, regionSlice)
-	} else if len(categorySlice) != 0 && len(regionSlice) == 0 {
-		regionCategorySlice = categorySlice
-	} else if len(categorySlice) == 0 && len(regionSlice) != 0 {
-		regionCategorySlice = regionSlice
-	} else {
-		regionCategorySlice = coupons
+	regionCategorySlice = intersect(categorySlice, regionSlice)
+	if len(regionCategorySlice) == 0 {
+		return c.JSON(http.StatusOK, regionCategorySlice)
 	}
+
 	respSlice = regionCategorySlice
-
-	if len(regionCategorySlice) != 0 {
-		couponsSlice = intersect(regionCategorySlice, coupons)
-	} else {
-		couponsSlice = coupons
-	}
-	respSlice = couponsSlice
 
 	var limitNum int64
 	if limit != "" {
@@ -136,12 +141,12 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(limitNum) >= len(couponsSlice) {
-			respSlice = couponsSlice[:len(couponsSlice)-1]
-		} else if limitNum < 0 {
-			respSlice = couponsSlice
+		if int(limitNum) > len(respSlice) {
+			respSlice = respSlice[:len(respSlice)]
+		} else if limitNum <= 0 {
+			return c.JSON(http.StatusOK, []entity.CouponEntity{})
 		} else {
-			respSlice = couponsSlice[:limitNum]
+			respSlice = respSlice[:limitNum]
 		}
 	}
 	if offset != "" {
@@ -149,16 +154,15 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(offsetNum) >= len(couponsSlice) || int(offsetNum+limitNum) > len(couponsSlice) {
-			respSlice = couponsSlice[:len(couponsSlice)]
-		} else if offsetNum < 0 {
-			respSlice = couponsSlice
+		if int(offsetNum) > len(respSlice) || offsetNum < 0 || int(offsetNum+limitNum) > len(respSlice) {
+			return c.JSON(http.StatusOK, []entity.CouponEntity{})
 		} else {
-			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
+			respSlice = respSlice[offsetNum : offsetNum+limitNum]
 		}
 	}
 
 	return c.JSON(http.StatusOK, respSlice)
+
 }
 
 func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) error {
@@ -201,8 +205,6 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		return err
 	}
 	respSlice = coupons
-	fmt.Println("cat", categorySlice)
-	fmt.Println("region", regionSlice)
 
 	if len(categorySlice) != 0 && len(regionSlice) != 0 {
 		regionCategorySlice = intersect(categorySlice, regionSlice)
@@ -210,6 +212,8 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		regionCategorySlice = categorySlice
 	} else if len(categorySlice) == 0 && len(regionSlice) != 0 {
 		regionCategorySlice = regionSlice
+	} else if len(categorySlice) != 0 && len(regionSlice) != 0 {
+
 	} else {
 		regionCategorySlice = coupons
 	}
@@ -219,7 +223,7 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 	if len(regionCategorySlice) != 0 {
 		couponsSlice = intersect(regionCategorySlice, coupons)
 	} else {
-		couponsSlice = coupons
+		return c.JSON(http.StatusOK, []entity.CouponEntity{})
 	}
 	respSlice = couponsSlice
 
@@ -229,12 +233,12 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(limitNum) > len(couponsSlice) {
-			respSlice = couponsSlice[:len(couponsSlice)]
-		} else if limitNum < 0 {
-			respSlice = couponsSlice
+		if int(limitNum) > len(respSlice) {
+			respSlice = respSlice[:len(respSlice)]
+		} else if limitNum <= 0 {
+			return c.JSON(http.StatusOK, []entity.CouponEntity{})
 		} else {
-			respSlice = couponsSlice[:limitNum]
+			respSlice = respSlice[:limitNum]
 		}
 	}
 	if offset != "" {
@@ -242,21 +246,23 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(offsetNum) > len(couponsSlice) {
-			respSlice = []entity.CouponEntity{}
-		} else if offsetNum < 0 {
-			respSlice = couponsSlice
-		} else if limitNum == 0 {
-			respSlice = couponsSlice[offsetNum:]
-		} else if int(offsetNum+limitNum) > len(couponsSlice) {
-			respSlice = []entity.CouponEntity{}
+		if int(offsetNum) > len(respSlice) || offsetNum < 0 || int(offsetNum+limitNum) > len(respSlice) {
+			return c.JSON(http.StatusOK, []entity.CouponEntity{})
 		} else {
-			respSlice = couponsSlice[offsetNum : offsetNum+limitNum]
+			respSlice = respSlice[offsetNum : offsetNum+limitNum]
 		}
 	}
-	fmt.Println("resp", respSlice)
 
 	return c.JSON(http.StatusOK, respSlice)
+}
+
+func (r *subscriptionCouponsRouteManager) getCouponsSearch(c echo.Context) error {
+	coupons, err := r.svc.GetCouponsSearchGRPC(c.Param("s"))
+	if err != nil {
+		return c.JSON(http.StatusOK, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, coupons)
 }
 
 func (r *subscriptionCouponsRouteManager) getCategories(c echo.Context) error {
@@ -284,13 +290,55 @@ func (r *subscriptionCouponsRouteManager) updateOrganizationInfo(c echo.Context)
 		return err
 	}
 	id := c.Get(middleware.CurrentUserKey)
-	role := c.Get(middleware.CurrentUserRole)
-	fmt.Println(role.(string))
-	if role == nil {
+	user, err := r.svc.Get(id.(string))
+	if err != nil {
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	role, err := r.svc.GetRole(organization.ID, user.Email)
+	if err != nil {
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+	fmt.Println(role)
+	if role == "" {
 		resp.Message = "role is not specified"
 		return c.JSON(http.StatusBadRequest, resp)
 	}
-	message, err := r.svc.UpdateOrganizationInfo(organization, fmt.Sprint(role.(string)), fmt.Sprint(id.(string)))
+	message, err := r.svc.UpdateOrganizationInfo(organization, "", fmt.Sprint(id.(string)))
+	if err != nil {
+		resp.Message = message
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+	resp.Message = message
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (r *subscriptionCouponsRouteManager) updateCoupon(c echo.Context) error {
+	coupon := entity.CouponEntity{}
+	var resp UpdateResponse
+	if err := c.Bind(&coupon); err != nil {
+		return err
+	}
+	id := c.Get(middleware.CurrentUserKey)
+	user, err := r.svc.Get(id.(string))
+	if err != nil {
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	role, err := r.svc.GetRole(coupon.OrgId, user.Email)
+	if err != nil {
+		resp.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+	fmt.Println(role)
+	if role == "" {
+		resp.Message = "role is not specified"
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+	message, err := r.svc.UpdateCoupon(coupon)
 	if err != nil {
 		resp.Message = message
 		return c.JSON(http.StatusBadRequest, resp)
@@ -306,13 +354,25 @@ func (r *subscriptionCouponsRouteManager) updateMembersInfo(c echo.Context) erro
 		return err
 	}
 	id := c.Get(middleware.CurrentUserKey)
-	role := c.Get(middleware.CurrentUserRole)
-	fmt.Println(role.(string))
-	if role == nil {
-		resp.Message = "role is not specified"
+	user, err := r.svc.Get(id.(string))
+	if err != nil {
+		resp.Message = err.Error()
 		return c.JSON(http.StatusBadRequest, resp)
 	}
-	message, err := r.svc.UpdateMembersInfo(members, fmt.Sprint(role.(string)), fmt.Sprint(id.(string)))
+
+	for _, v := range members {
+		role, err := r.svc.GetRole(v.OrganizationID, user.Email)
+		if err != nil {
+			resp.Message = err.Error()
+			return c.JSON(http.StatusBadRequest, resp)
+		}
+		fmt.Println(role)
+		if role == "" {
+			resp.Message = "role is not specified"
+			return c.JSON(http.StatusBadRequest, resp)
+		}
+	}
+	message, err := r.svc.UpdateMembersInfo(members, "", fmt.Sprint(id.(string)))
 	if err != nil {
 		resp.Message = message
 		return c.JSON(http.StatusBadRequest, resp)

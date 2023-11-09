@@ -24,13 +24,16 @@ const _ = grpc.SupportPackageIsVersion7
 type AdminServiceClient interface {
 	GetSubsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCouponsResponse, error)
+	GetCouponsSearchGRPC(ctx context.Context, in *Search, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetCategoriesGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCategoryResponse, error)
 	GetRegionsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RegionResponse, error)
+	GetLinksGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Links, error)
 	GetCouponsByRegionGRPC(ctx context.Context, in *Region, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetCouponsByCategoryGRPC(ctx context.Context, in *Category, opts ...grpc.CallOption) (*GetCouponsResponse, error)
 	GetOrganizationInfo(ctx context.Context, in *InfoOrganizationRequest, opts ...grpc.CallOption) (*InfoOrganizationResponse, error)
 	UpdateOrganizationInfo(ctx context.Context, in *UpdateOrganizationRequest, opts ...grpc.CallOption) (*UpdateOrganizationResponse, error)
 	UpdateMembersInfo(ctx context.Context, in *UpdateMembersRequest, opts ...grpc.CallOption) (*UpdateMembersResponse, error)
+	UpdateCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*UpdateMembersResponse, error)
 }
 
 type adminServiceClient struct {
@@ -59,6 +62,15 @@ func (c *adminServiceClient) GetCouponsGRPC(ctx context.Context, in *Empty, opts
 	return out, nil
 }
 
+func (c *adminServiceClient) GetCouponsSearchGRPC(ctx context.Context, in *Search, opts ...grpc.CallOption) (*GetCouponsResponse, error) {
+	out := new(GetCouponsResponse)
+	err := c.cc.Invoke(ctx, "/api.AdminService/GetCouponsSearchGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminServiceClient) GetCategoriesGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetCategoryResponse, error) {
 	out := new(GetCategoryResponse)
 	err := c.cc.Invoke(ctx, "/api.AdminService/GetCategoriesGRPC", in, out, opts...)
@@ -71,6 +83,15 @@ func (c *adminServiceClient) GetCategoriesGRPC(ctx context.Context, in *Empty, o
 func (c *adminServiceClient) GetRegionsGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*RegionResponse, error) {
 	out := new(RegionResponse)
 	err := c.cc.Invoke(ctx, "/api.AdminService/GetRegionsGRPC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetLinksGRPC(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Links, error) {
+	out := new(Links)
+	err := c.cc.Invoke(ctx, "/api.AdminService/GetLinksGRPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,19 +143,31 @@ func (c *adminServiceClient) UpdateMembersInfo(ctx context.Context, in *UpdateMe
 	return out, nil
 }
 
+func (c *adminServiceClient) UpdateCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*UpdateMembersResponse, error) {
+	out := new(UpdateMembersResponse)
+	err := c.cc.Invoke(ctx, "/api.AdminService/UpdateCoupon", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility
 type AdminServiceServer interface {
 	GetSubsGRPC(context.Context, *Empty) (*SubscriptionsResponse, error)
 	GetCouponsGRPC(context.Context, *Empty) (*GetCouponsResponse, error)
+	GetCouponsSearchGRPC(context.Context, *Search) (*GetCouponsResponse, error)
 	GetCategoriesGRPC(context.Context, *Empty) (*GetCategoryResponse, error)
 	GetRegionsGRPC(context.Context, *Empty) (*RegionResponse, error)
+	GetLinksGRPC(context.Context, *Empty) (*Links, error)
 	GetCouponsByRegionGRPC(context.Context, *Region) (*GetCouponsResponse, error)
 	GetCouponsByCategoryGRPC(context.Context, *Category) (*GetCouponsResponse, error)
 	GetOrganizationInfo(context.Context, *InfoOrganizationRequest) (*InfoOrganizationResponse, error)
 	UpdateOrganizationInfo(context.Context, *UpdateOrganizationRequest) (*UpdateOrganizationResponse, error)
 	UpdateMembersInfo(context.Context, *UpdateMembersRequest) (*UpdateMembersResponse, error)
+	UpdateCoupon(context.Context, *Coupon) (*UpdateMembersResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -148,11 +181,17 @@ func (UnimplementedAdminServiceServer) GetSubsGRPC(context.Context, *Empty) (*Su
 func (UnimplementedAdminServiceServer) GetCouponsGRPC(context.Context, *Empty) (*GetCouponsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCouponsGRPC not implemented")
 }
+func (UnimplementedAdminServiceServer) GetCouponsSearchGRPC(context.Context, *Search) (*GetCouponsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCouponsSearchGRPC not implemented")
+}
 func (UnimplementedAdminServiceServer) GetCategoriesGRPC(context.Context, *Empty) (*GetCategoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCategoriesGRPC not implemented")
 }
 func (UnimplementedAdminServiceServer) GetRegionsGRPC(context.Context, *Empty) (*RegionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegionsGRPC not implemented")
+}
+func (UnimplementedAdminServiceServer) GetLinksGRPC(context.Context, *Empty) (*Links, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLinksGRPC not implemented")
 }
 func (UnimplementedAdminServiceServer) GetCouponsByRegionGRPC(context.Context, *Region) (*GetCouponsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCouponsByRegionGRPC not implemented")
@@ -168,6 +207,9 @@ func (UnimplementedAdminServiceServer) UpdateOrganizationInfo(context.Context, *
 }
 func (UnimplementedAdminServiceServer) UpdateMembersInfo(context.Context, *UpdateMembersRequest) (*UpdateMembersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembersInfo not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateCoupon(context.Context, *Coupon) (*UpdateMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCoupon not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 
@@ -218,6 +260,24 @@ func _AdminService_GetCouponsGRPC_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_GetCouponsSearchGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Search)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetCouponsSearchGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdminService/GetCouponsSearchGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetCouponsSearchGRPC(ctx, req.(*Search))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AdminService_GetCategoriesGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -250,6 +310,24 @@ func _AdminService_GetRegionsGRPC_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).GetRegionsGRPC(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetLinksGRPC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetLinksGRPC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdminService/GetLinksGRPC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetLinksGRPC(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -344,6 +422,24 @@ func _AdminService_UpdateMembersInfo_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_UpdateCoupon_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Coupon)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateCoupon(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.AdminService/UpdateCoupon",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateCoupon(ctx, req.(*Coupon))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -360,12 +456,20 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AdminService_GetCouponsGRPC_Handler,
 		},
 		{
+			MethodName: "GetCouponsSearchGRPC",
+			Handler:    _AdminService_GetCouponsSearchGRPC_Handler,
+		},
+		{
 			MethodName: "GetCategoriesGRPC",
 			Handler:    _AdminService_GetCategoriesGRPC_Handler,
 		},
 		{
 			MethodName: "GetRegionsGRPC",
 			Handler:    _AdminService_GetRegionsGRPC_Handler,
+		},
+		{
+			MethodName: "GetLinksGRPC",
+			Handler:    _AdminService_GetLinksGRPC_Handler,
 		},
 		{
 			MethodName: "GetCouponsByRegionGRPC",
@@ -386,6 +490,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMembersInfo",
 			Handler:    _AdminService_UpdateMembersInfo_Handler,
+		},
+		{
+			MethodName: "UpdateCoupon",
+			Handler:    _AdminService_UpdateCoupon_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

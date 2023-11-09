@@ -57,9 +57,9 @@ func (r *subscriptionCouponRepo) GetOrgId(email string) (string, error) {
 	return orgID, nil
 }
 
-func (r *subscriptionCouponRepo) GetRole(email string) (string, error) {
+func (r *subscriptionCouponRepo) GetRole(orgId, email string) (string, error) {
 	role := ""
-	err := r.database.QueryRow("SELECT role FROM members WHERE email=$1", email).Scan(&role)
+	err := r.database.QueryRow("SELECT role FROM members WHERE email=$1 AND organization_id = $2", email, orgId).Scan(&role)
 	if err != nil {
 		return "", err
 	}
@@ -119,4 +119,28 @@ func (r *subscriptionCouponRepo) getMyMedia(id string) (entity.Media, error) {
 	}
 
 	return media, nil
+}
+
+func (r *subscriptionCouponRepo) Get(id string) (*entity.User, error) {
+	return r.executeQueryRow("SELECT * FROM users WHERE id = $1", id)
+}
+
+func (r *subscriptionCouponRepo) executeQueryRow(query string, args ...any) (*entity.User, error) {
+	var user entity.User
+
+	err := r.database.QueryRow(query, args...).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Phone,
+		&user.Code,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Subscription,
+		&user.SubscriptionTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
