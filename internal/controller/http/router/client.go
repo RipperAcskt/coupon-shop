@@ -100,7 +100,7 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 	limit := c.QueryParam("limit")
 	offset := c.QueryParam("offset")
 
-	var regionSlice, categorySlice, respSlice, regionCategorySlice []entity.CouponEntity
+	var regionSlice, categorySlice, respSlice, regionCategorySlice, couponsSlice []entity.CouponEntity
 	var err error
 
 	if region != "" {
@@ -129,12 +129,32 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 		}
 	}
 
-	regionCategorySlice = intersect(categorySlice, regionSlice)
-	if len(regionCategorySlice) == 0 {
-		return c.JSON(http.StatusOK, regionCategorySlice)
+	coupons, err := r.svc.GetCoupons(id.(string))
+	if err != nil {
+		return err
 	}
+	respSlice = coupons
 
+	if len(categorySlice) != 0 && len(regionSlice) != 0 {
+		regionCategorySlice = intersect(categorySlice, regionSlice)
+	} else if len(categorySlice) != 0 && len(regionSlice) == 0 {
+		regionCategorySlice = categorySlice
+	} else if len(categorySlice) == 0 && len(regionSlice) != 0 {
+		regionCategorySlice = regionSlice
+	} else if len(categorySlice) != 0 && len(regionSlice) != 0 {
+
+	} else {
+		regionCategorySlice = coupons
+	}
 	respSlice = regionCategorySlice
+	fmt.Println("regionCat", regionCategorySlice)
+
+	if len(regionCategorySlice) != 0 {
+		couponsSlice = intersect(regionCategorySlice, coupons)
+	} else {
+		return c.JSON(http.StatusOK, []entity.CouponEntity{})
+	}
+	respSlice = couponsSlice
 
 	var limitNum int64
 	if limit != "" {
@@ -146,8 +166,6 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 			respSlice = respSlice[:len(respSlice)]
 		} else if limitNum <= 0 {
 			return c.JSON(http.StatusOK, []entity.CouponEntity{})
-		} else {
-			respSlice = respSlice[:limitNum]
 		}
 	}
 	if offset != "" {
@@ -155,10 +173,14 @@ func (r *subscriptionCouponsRouteManager) getCoupons(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
-		if int(offsetNum) > len(respSlice) || offsetNum < 0 || int(offsetNum+limitNum) > len(respSlice) {
+		if (int(offsetNum) > len(respSlice) || offsetNum < 0 || int(offsetNum) > len(respSlice)) && int(limitNum) <= len(respSlice) {
 			return c.JSON(http.StatusOK, []entity.CouponEntity{})
-		} else {
+		} else if int(offsetNum+limitNum) > len(respSlice) {
+			respSlice = respSlice[offsetNum:]
+		} else if limitNum > 0 {
 			respSlice = respSlice[offsetNum : offsetNum+limitNum]
+		} else {
+			respSlice = respSlice[offsetNum:]
 		}
 	}
 
