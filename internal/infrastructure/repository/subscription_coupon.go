@@ -41,7 +41,7 @@ func (r *subscriptionCouponRepo) GetEmailUser(userID string) (string, error) {
 
 func (r *subscriptionCouponRepo) GetOrgSubscriptionLevel(email string) (int, error) {
 	orgLevel := 0
-	err := r.database.QueryRow("WITH subscription(organization_id) AS (SELECT organization_id FROM members WHERE email = '$1') SELECT MAX(level_subscription) FROM organization JOIN subscription ON subscription.organization_id = organization.id", email).Scan(&orgLevel)
+	err := r.database.QueryRow("WITH subscription(organization_id) AS (SELECT organization_id FROM members WHERE email = $1) SELECT MAX(level_subscription) FROM organization JOIN subscription ON subscription.organization_id = organization.id", email).Scan(&orgLevel)
 	if err != nil {
 		return 0, err
 	}

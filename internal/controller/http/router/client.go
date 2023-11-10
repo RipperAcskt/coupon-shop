@@ -31,7 +31,7 @@ type SubscriptionCouponService interface {
 	GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error)
 	GetCategories() ([]entity.CategorySubcategory, error)
 	GetRegions() ([]entity.Region, error)
-	GetLinks() ([]entity.Link, error)
+	GetLinks(region string) (entity.Link, error)
 	Get(id string) (*entity.User, error)
 	UpdateCoupon(coupon entity.CouponEntity) (string, error)
 	GetCouponsSearchGRPC(s string) ([]entity.CouponEntity, error)
@@ -60,7 +60,7 @@ func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("GET", "/links", r.getLinks)
+	r.group.Add("GET", "/links/:region", r.getLinks)
 	r.group.Add("PUT", "/coupons", r.updateCoupon)
 	r.group.Add("GET", "/coupons/:s", r.getCouponsSearch)
 
@@ -76,7 +76,8 @@ func (r *subscriptionCouponsRouteManager) getSubscriptions(c echo.Context) error
 }
 
 func (r *subscriptionCouponsRouteManager) getLinks(c echo.Context) error {
-	resp, err := r.svc.GetLinks()
+	region := c.Param("region")
+	resp, err := r.svc.GetLinks(region)
 	if err != nil {
 		return err
 	}

@@ -130,7 +130,7 @@ message Link {
 }
 
 message Links {
-  repeated Link links = 1;
+  Link links = 1;
 }
 
 message Search {
@@ -143,7 +143,7 @@ service AdminService  {
   rpc GetCouponsSearchGRPC(Search) returns (GetCouponsResponse){};
   rpc GetCategoriesGRPC(Empty) returns (GetCategoryResponse){};
   rpc GetRegionsGRPC(Empty) returns (RegionResponse){};
-  rpc GetLinksGRPC(Empty) returns (Links){};
+  rpc GetLinksGRPC(Region) returns (Links){};
   rpc GetCouponsByRegionGRPC(Region) returns (GetCouponsResponse){};
   rpc GetCouponsByCategoryGRPC(Category) returns (GetCouponsResponse){};
   rpc GetOrganizationInfo(InfoOrganizationRequest) returns (InfoOrganizationResponse){};

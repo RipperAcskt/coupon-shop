@@ -39,23 +39,21 @@ func New(r SubscriptionCouponInterface, cfg *pkg.AppConfig, client adminpb.Admin
 func (p SubscriptionCoupon) Get(id string) (*entity.User, error) {
 	return p.repository.Get(id)
 }
-func (p SubscriptionCoupon) GetLinks() ([]entity.Link, error) {
+func (p SubscriptionCoupon) GetLinks(region string) (entity.Link, error) {
 	ctx := context.Background()
-	links, err := p.client.GetLinksGRPC(ctx, &adminpb.Empty{})
+	links, err := p.client.GetLinksGRPC(ctx, &adminpb.Region{Region: region})
 	if err != nil {
-		return nil, err
+		return entity.Link{}, err
 	}
 
-	resultLinks := make([]entity.Link, len(links.Links))
-	for i, v := range links.Links {
-		resultLinks[i] = entity.Link{
-			Id:     v.Id,
-			Name:   v.Name,
-			Link:   v.Link,
-			Region: v.Region,
-		}
+	resultLink := entity.Link{
+		Id:     links.Links.Id,
+		Name:   links.Links.Name,
+		Link:   links.Links.Link,
+		Region: links.Links.Region,
 	}
-	return resultLinks, nil
+
+	return resultLink, nil
 }
 
 func (p SubscriptionCoupon) GetSubscriptions(userId string) ([]entity.SubscriptionEntity, error) {
