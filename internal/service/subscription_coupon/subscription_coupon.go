@@ -423,6 +423,8 @@ func (p SubscriptionCoupon) GetRegions() ([]entity.Region, error) {
 	for i, v := range regions.Regions {
 		resultRegions[i] = entity.Region{
 			Name: v.Region,
+			Tg:   v.Tg,
+			Vk:   v.Vk,
 		}
 	}
 

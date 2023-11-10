@@ -115,6 +115,8 @@ message UpdateMembersResponse {
 
 message Region {
   string region = 1;
+  string tg = 2;
+  string vk = 3;
 }
 
 message Category {
