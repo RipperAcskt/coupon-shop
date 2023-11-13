@@ -15,7 +15,7 @@ import (
 type SubscriptionCouponInterface interface {
 	GetUserSubscriptionLevel(userId string) (int, error)
 	GetEmailUser(userID string) (string, error)
-	GetOrgId(email string) (string, error)
+	GetOrgId(email string) ([]string, error)
 	GetOrgSubscriptionLevel(email string) (int, error)
 	GetRole(orgId, email string) (string, error)
 	GetCouponsPagination(pagination entity.PaginationInfo) ([]entity.CouponEntity, error)
@@ -518,48 +518,56 @@ func (p SubscriptionCoupon) GetCouponsStandardByCategory(category entity.Categor
 	return resultCoupons, nil
 }
 
-func (p SubscriptionCoupon) GetOrganizationInfo(userId string) (entity.OrganizationEntity, error) {
+func (p SubscriptionCoupon) GetOrganizationInfo(userId string) ([]entity.OrganizationEntity, error) {
 	ctx := context.Background()
 	email, err := p.repository.GetEmailUser(userId)
 	if err != nil {
-		return entity.OrganizationEntity{}, err
+		return nil, err
 	}
 	orgID, err := p.repository.GetOrgId(email)
 	if err != nil {
-		return entity.OrganizationEntity{}, err
+		return nil, err
 	}
-	if orgID == "" {
-		return entity.OrganizationEntity{}, fmt.Errorf("user is not a member of organization")
+	if orgID == nil {
+		return nil, fmt.Errorf("user is not a member of organization")
 	}
-	orgInfo, err := p.client.GetOrganizationInfo(ctx, &adminpb.InfoOrganizationRequest{OrgId: orgID})
-	if orgInfo == nil {
-		return entity.OrganizationEntity{}, fmt.Errorf("info about company not found")
-	}
-	var Response = entity.OrganizationEntity{
-		Name:              orgInfo.Name,
-		ID:                orgInfo.ID,
-		EmailAdmin:        orgInfo.EmailAdmin,
-		LevelSubscription: int(orgInfo.LevelSubscription),
-		ORGN:              orgInfo.Orgn,
-		KPP:               orgInfo.Kpp,
-		INN:               orgInfo.Inn,
-		Address:           orgInfo.Kpp,
-		Members:           make([]entity.Member, len(orgInfo.Members)),
-	}
-	for i, v := range orgInfo.Members {
-		Response.Members[i] = entity.Member{
-			ID:             v.Id,
-			Email:          v.Email,
-			FirstName:      v.FirstName,
-			SecondName:     v.SecondName,
-			OrganizationID: v.OrgID,
-			Role:           v.Role,
+
+	responces := make([]entity.OrganizationEntity, len(orgID))
+	for _, v := range orgID {
+		orgInfo, err := p.client.GetOrganizationInfo(ctx, &adminpb.InfoOrganizationRequest{OrgId: v})
+		if orgInfo == nil || err != nil {
+			return nil, fmt.Errorf("info about company not found")
 		}
+
+		var Response = entity.OrganizationEntity{
+			Name:              orgInfo.Name,
+			ID:                orgInfo.ID,
+			EmailAdmin:        orgInfo.EmailAdmin,
+			LevelSubscription: int(orgInfo.LevelSubscription),
+			ORGN:              orgInfo.Orgn,
+			KPP:               orgInfo.Kpp,
+			INN:               orgInfo.Inn,
+			Address:           orgInfo.Kpp,
+			Members:           make([]entity.Member, len(orgInfo.Members)),
+		}
+		for i, v := range orgInfo.Members {
+			Response.Members[i] = entity.Member{
+				ID:             v.Id,
+				Email:          v.Email,
+				FirstName:      v.FirstName,
+				SecondName:     v.SecondName,
+				OrganizationID: v.OrgID,
+				Role:           v.Role,
+			}
+		}
+
+		responces = append(responces, Response)
 	}
-	return Response, nil
+
+	return responces, nil
 }
 
-func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, userID string) (string, error) {
+func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, userID, organID string) (string, error) {
 	ctx := context.Background()
 	email, err := p.repository.GetEmailUser(userID)
 	if err != nil {
@@ -569,11 +577,11 @@ func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.Org
 	if err != nil {
 		return "", err
 	}
-	if orgID == "" {
+	if orgID == nil {
 		return "", fmt.Errorf("user is not a member of organization")
 	}
 	response, err := p.client.UpdateOrganizationInfo(ctx, &adminpb.UpdateOrganizationRequest{
-		ID:                orgID,
+		ID:                organID,
 		Name:              organizationEntity.Name,
 		EmailAdmin:        organizationEntity.EmailAdmin,
 		LevelSubscription: int32(organizationEntity.LevelSubscription),
@@ -591,7 +599,7 @@ func (p SubscriptionCoupon) UpdateOrganizationInfo(organizationEntity entity.Org
 	return Response, nil
 }
 
-func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role string, id string) (string, error) {
+func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role string, id, organID string) (string, error) {
 	ctx := context.Background()
 	email, err := p.repository.GetEmailUser(id)
 	if err != nil {
@@ -601,7 +609,7 @@ func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role stri
 	if err != nil {
 		return "", err
 	}
-	if orgID == "" {
+	if orgID == nil {
 		return "", fmt.Errorf("user is not a member of organization")
 	}
 	MembersRequest := make([]*adminpb.MemberInfo, 0)
@@ -618,7 +626,7 @@ func (p SubscriptionCoupon) UpdateMembersInfo(members []entity.Member, role stri
 	fmt.Println("Members", MembersRequest)
 	response, err := p.client.UpdateMembersInfo(ctx, &adminpb.UpdateMembersRequest{
 		Members:        MembersRequest,
-		OrganizationID: orgID,
+		OrganizationID: organID,
 		RoleUser:       role,
 	})
 	if err != nil {

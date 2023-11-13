@@ -48,11 +48,21 @@ func (r *subscriptionCouponRepo) GetOrgSubscriptionLevel(email string) (int, err
 	return orgLevel, nil
 }
 
-func (r *subscriptionCouponRepo) GetOrgId(email string) (string, error) {
-	orgID := ""
-	err := r.database.QueryRow("SELECT organization_id FROM members WHERE email = $1", email).Scan(&orgID)
+func (r *subscriptionCouponRepo) GetOrgId(email string) ([]string, error) {
+	orgID := []string{}
+	rows, err := r.database.Query("SELECT organization_id FROM members WHERE email = $1", email)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	for rows.Next() {
+		id := ""
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+
+		orgID = append(orgID, id)
 	}
 	return orgID, nil
 }

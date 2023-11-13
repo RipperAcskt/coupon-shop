@@ -21,12 +21,12 @@ type SubscriptionCouponService interface {
 	GetCoupons(userId string) ([]entity.CouponEntity, error)
 	GetCouponsByRegion(userId, region string) ([]entity.CouponEntity, error)
 	GetCouponsByCategory(userId string, category entity.Category) ([]entity.CouponEntity, error)
-	GetOrganizationInfo(userId string) (entity.OrganizationEntity, error)
+	GetOrganizationInfo(userId string) ([]entity.OrganizationEntity, error)
 	GetCouponsStandard() ([]entity.CouponEntity, error)
 	GetCouponsStandardByRegion(region string) ([]entity.CouponEntity, error)
 	GetCouponsStandardByCategory(category entity.Category) ([]entity.CouponEntity, error)
-	UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, id string) (string, error)
-	UpdateMembersInfo(members []entity.Member, role string, id string) (string, error)
+	UpdateOrganizationInfo(organizationEntity entity.OrganizationEntity, role string, userID, organID string) (string, error)
+	UpdateMembersInfo(members []entity.Member, role string, id, organID string) (string, error)
 	GetRole(orgId, email string) (string, error)
 	GetCouponsPagination(info entity.PaginationInfo) ([]entity.CouponEntity, error)
 	GetCategories() ([]entity.CategorySubcategory, error)
@@ -59,7 +59,7 @@ func (r *subscriptionCouponsRouteManager) PopulateRoutes() {
 	//r.group.Add("GET", "/coupons/standard/filter/category/:category", r.getCouponsStandardByCategory)
 	r.group.Add("GET", "/organizationInfo", r.getOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("PUT", "/organizationInfo", r.updateOrganizationInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
-	r.group.Add("PUT", "/membersInfo", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
+	r.group.Add("PUT", "/membersInfo/:id", r.updateMembersInfo, middleware.AuthMiddleware(r.serverConfig.Secret))
 	r.group.Add("GET", "/links/:region", r.getLinks)
 	r.group.Add("PUT", "/coupons", r.updateCoupon)
 	r.group.Add("GET", "/coupons/:s", r.getCouponsSearch)
@@ -249,6 +249,8 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 		return c.JSON(http.StatusOK, []entity.CouponEntity{})
 	}
 	respSlice = couponsSlice
+	fmt.Println("respSlice", regionCategorySlice)
+	fmt.Println("coupons", coupons)
 
 	var limitNum int64
 	if limit != "" {
@@ -268,6 +270,7 @@ func (r *subscriptionCouponsRouteManager) getCouponsStandard(c echo.Context) err
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 		if int(offsetNum) > len(respSlice) || offsetNum < 0 || int(offsetNum) > len(respSlice) {
+			fmt.Println("send nil")
 			return c.JSON(http.StatusOK, []entity.CouponEntity{})
 		} else if int(offsetNum+limitNum) > len(respSlice) {
 			respSlice = respSlice[offsetNum:]
@@ -331,7 +334,7 @@ func (r *subscriptionCouponsRouteManager) updateOrganizationInfo(c echo.Context)
 		resp.Message = "role is not specified"
 		return c.JSON(http.StatusBadRequest, resp)
 	}
-	message, err := r.svc.UpdateOrganizationInfo(organization, "", fmt.Sprint(id.(string)))
+	message, err := r.svc.UpdateOrganizationInfo(organization, "", fmt.Sprint(id.(string)), organization.ID)
 	if err != nil {
 		resp.Message = message
 		return c.JSON(http.StatusBadRequest, resp)
@@ -373,6 +376,7 @@ func (r *subscriptionCouponsRouteManager) updateCoupon(c echo.Context) error {
 }
 
 func (r *subscriptionCouponsRouteManager) updateMembersInfo(c echo.Context) error {
+	orgID := c.Param("id")
 	var members []entity.Member
 	var resp UpdateResponse
 	if err := c.Bind(&members); err != nil {
@@ -397,7 +401,7 @@ func (r *subscriptionCouponsRouteManager) updateMembersInfo(c echo.Context) erro
 			return c.JSON(http.StatusBadRequest, resp)
 		}
 	}
-	message, err := r.svc.UpdateMembersInfo(members, "", fmt.Sprint(id.(string)))
+	message, err := r.svc.UpdateMembersInfo(members, "", fmt.Sprint(id.(string)), orgID)
 	if err != nil {
 		resp.Message = message
 		return c.JSON(http.StatusBadRequest, resp)
