@@ -23,6 +23,7 @@ type OrganizationEntity struct {
 	INN               string   `json:"inn"`
 	Address           string   `json:"address"`
 	Members           []Member `json:"members"`
+	ContentUrl        string   `json:"content_url"`
 	//image
 }
 

@@ -76,6 +76,7 @@ message InfoOrganizationResponse {
   string inn = 7;
   string address = 8;
   repeated MemberInfo members = 9;
+  string contentUrl = 10;
 }
 
 message MemberInfo {

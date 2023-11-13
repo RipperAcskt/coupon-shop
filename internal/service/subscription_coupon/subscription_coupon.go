@@ -549,6 +549,7 @@ func (p SubscriptionCoupon) GetOrganizationInfo(userId string) ([]entity.Organiz
 			INN:               orgInfo.Inn,
 			Address:           orgInfo.Kpp,
 			Members:           make([]entity.Member, len(orgInfo.Members)),
+			ContentUrl:        orgInfo.ContentUrl,
 		}
 		for i, v := range orgInfo.Members {
 			Response.Members[i] = entity.Member{
