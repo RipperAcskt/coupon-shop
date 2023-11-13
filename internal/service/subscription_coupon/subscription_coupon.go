@@ -532,7 +532,7 @@ func (p SubscriptionCoupon) GetOrganizationInfo(userId string) ([]entity.Organiz
 		return nil, fmt.Errorf("user is not a member of organization")
 	}
 
-	responces := make([]entity.OrganizationEntity, len(orgID))
+	responces := []entity.OrganizationEntity{}
 	for _, v := range orgID {
 		orgInfo, err := p.client.GetOrganizationInfo(ctx, &adminpb.InfoOrganizationRequest{OrgId: v})
 		if orgInfo == nil || err != nil {
